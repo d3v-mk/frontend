@@ -9,12 +9,24 @@ import com.panopoker.ui.auth.LoginScreen
 import com.panopoker.ui.auth.RegisterScreen
 import com.panopoker.ui.lobby.LobbyScreen
 import com.panopoker.ui.mesa.MesaScreen
+import com.panopoker.ui.splash.SplashScreen
 
 @Composable
 fun PanoPokerNav() {
     val navController: NavHostController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "login") {
+    NavHost(navController = navController, startDestination = "splash") { // ⬅️ Começa pela splash
+
+        composable("splash") {
+            SplashScreen(
+                onSplashFinished = {
+                    navController.navigate("login") {
+                        popUpTo("splash") { inclusive = true } // remove splash do histórico
+                    }
+                }
+            )
+        }
+
         composable("login") {
             LoginScreen(
                 onLoginSuccess = {
@@ -25,14 +37,17 @@ fun PanoPokerNav() {
                 }
             )
         }
+
         composable("register") {
             RegisterScreen(onRegisterSuccess = {
                 navController.navigate("login")
             })
         }
+
         composable("lobby") {
             LobbyScreen(navController = navController)
         }
+
         composable("mesa/{mesaId}") { backStackEntry ->
             val mesaId = backStackEntry.arguments?.getString("mesaId")?.toIntOrNull()
             if (mesaId != null) {

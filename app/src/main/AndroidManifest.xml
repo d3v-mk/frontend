@@ -8,8 +8,6 @@
     <application
 
         android:networkSecurityConfig="@xml/network_security_config"
-
-
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -19,6 +17,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Panopoker"
         tools:targetApi="31">
+
+        <activity
+            android:name=".ui.mesa.MesaActivity"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize"
+            android:theme="@style/Theme.Panopoker" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

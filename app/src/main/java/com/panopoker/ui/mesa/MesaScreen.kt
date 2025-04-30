@@ -1,18 +1,15 @@
 package com.panopoker.ui.mesa
 
-import android.widget.Toast
+import android.util.Log
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.panopoker.data.network.RetrofitInstance
 import com.panopoker.data.service.MesaService
@@ -22,216 +19,144 @@ import com.panopoker.model.Jogador
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+
+
+// Componentes
+import com.panopoker.ui.mesa.MesaImagemDeFundo
+import com.panopoker.ui.mesa.BotaoSair
+import com.panopoker.ui.mesa.CartasComunitarias
+import com.panopoker.ui.mesa.CartasDoJogador
+import com.panopoker.ui.mesa.ControlesDeAcao
+import com.panopoker.ui.mesa.AvataresNaMesa
 
 @Composable
-fun MesaScreen(mesaId: Int, navController: NavController) {
+fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     val context = LocalContext.current
     val session = remember { SessionManager(context) }
     val accessToken = session.fetchAuthToken() ?: ""
+    val userIdToken = session.getUserIdFromToken(accessToken) ?: -99
     val coroutineScope = rememberCoroutineScope()
 
     var jogadores by remember { mutableStateOf<List<Jogador>>(emptyList()) }
     var cartas by remember { mutableStateOf<CartasComunitarias?>(null) }
     var minhasCartas by remember { mutableStateOf<List<String>>(emptyList()) }
     var jogadorDaVezId by remember { mutableStateOf<Int?>(null) }
-    var error by remember { mutableStateOf<String?>(null) }
+    var stackJogador by remember { mutableFloatStateOf(1f) }
+    var raiseValue by remember { mutableFloatStateOf(0f) }
+    var mostrarSlider by remember { mutableStateOf(false) }
+
+
+    val usuarioLogadoId = session.fetchUserId()
+
+    LaunchedEffect(mostrarSlider) {
+        if (mostrarSlider) {
+            val jogadorAtual = jogadores.find { it.user_id == userIdToken }
+            val saldo = jogadorAtual?.saldo_atual ?: 0.01f
+            raiseValue = (saldo / 2f).coerceIn(0.01f, saldo)
+        }
+    }
 
     fun refreshMesa() {
         coroutineScope.launch(Dispatchers.IO) {
             try {
-                val mesaService = RetrofitInstance.retrofit.create(MesaService::class.java)
-                val jogadoresResp = mesaService.getJogadoresDaMesa(mesaId, accessToken)
-                if (jogadoresResp.isSuccessful) jogadores = jogadoresResp.body() ?: emptyList()
+                val service = RetrofitInstance.retrofit.create(MesaService::class.java)
 
-                val cartasResp = mesaService.getCartasComunitarias(mesaId, accessToken)
-                if (cartasResp.isSuccessful) cartas = cartasResp.body()
+                val mesaResponse = service.getMesa(mesaId, "Bearer $accessToken")
+                val mesaBody = mesaResponse.body()
 
-                val minhasResp = mesaService.getMinhasCartas(mesaId, accessToken)
-                if (minhasResp.isSuccessful) minhasCartas = minhasResp.body() ?: emptyList()
+                val responseJogadores = service.getJogadoresDaMesa(mesaId, "Bearer $accessToken")
+                val responseMinhasCartas = service.getMinhasCartas(mesaId, "Bearer $accessToken")
+                val responseCartasComunitarias = service.getCartasComunitarias(mesaId, "Bearer $accessToken") // <-- esse!
 
-                val vezResp = mesaService.getJogadorDaVez(mesaId, accessToken)
-                if (vezResp.isSuccessful) jogadorDaVezId = vezResp.body()?.get("jogador_da_vez")
+                val jogadoresRecebidos = responseJogadores.body() ?: emptyList()
+
+                Log.d("🔥 MesaDebug", "📥 Mesa ID: $mesaId")
+                Log.d("🔥 MesaDebug", "📥 Estado da rodada: ${mesaBody?.estado_da_rodada}")
+                Log.d("🔥 MesaDebug", "📥 Jogador da vez (ID): ${mesaBody?.jogador_da_vez}")
+                Log.d("🔥 MesaDebug", "📥 Flop: ${responseCartasComunitarias.body()?.cartas_comunitarias?.flop}")
+                Log.d("🔥 MesaDebug", "📥 Turn: ${responseCartasComunitarias.body()?.cartas_comunitarias?.turn}")
+                Log.d("🔥 MesaDebug", "📥 River: ${responseCartasComunitarias.body()?.cartas_comunitarias?.river}")
+                Log.d("🔥 MesaDebug", "📥 Jogadores recebidos: ${jogadoresRecebidos.size}")
+
+                jogadoresRecebidos.forEach {
+                    Log.d("🔥 MesaDebug", "👤 ${it.username} | ID: ${it.user_id} | Pos: ${it.posicao_cadeira} | Stack: ${it.saldo_atual} | Foldado: ${it.foldado}")
+                }
+
+                jogadores = jogadoresRecebidos
+                cartas = responseCartasComunitarias.body()?.cartas_comunitarias // <-- aqui você usa o response certo
+                jogadorDaVezId = mesaBody?.jogador_da_vez
+                minhasCartas = responseMinhasCartas.body() ?: emptyList()
+
+                jogadores.find { it.user_id == userIdToken }?.let {
+                    stackJogador = it.saldo_atual
+                }
+
+                Log.d("🔥 MesaDebug", "📌 Minhas cartas: $minhasCartas")
 
             } catch (e: Exception) {
-                error = "Erro: ${e.message}"
+                Log.e("🔥 MesaDebug", "❌ Erro ao atualizar mesa: ${e.message}")
             }
         }
     }
 
-    LaunchedEffect(true) {
+
+
+
+
+
+
+    LaunchedEffect(Unit) {
+        refreshMesa() // 🚀 Faz o primeiro refresh IMEDIATO
+        delay(500)
         while (true) {
             refreshMesa()
             delay(2000)
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF1B1B1B))
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Mesa #$mesaId", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
 
-        // 🎯 Indicação do jogador da vez
-        val nomeJogadorDaVez = jogadores.find { it.id == jogadorDaVezId }?.username
-        if (nomeJogadorDaVez != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("🎯 Vez de: $nomeJogadorDaVez", color = Color.Yellow, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+        Box(modifier = Modifier.align(Alignment.Center)) {
+            MesaImagemDeFundo()
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Card(
-            modifier = Modifier.padding(8.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.DarkGray),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text("🤖 Dealer (NPC)", modifier = Modifier.padding(12.dp), color = Color.White)
+        Box(modifier = Modifier.align(Alignment.TopStart)) {
+            BotaoSair(context, mesaId, accessToken, coroutineScope)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            cartas?.let {
-                val cartasParaMostrar = buildList {
-                    addAll(it.flop)
-                    if ((jogadores.count { j -> !j.foldado } <= 1) || jogadores.all { j -> j.aposta_atual == jogadores.first().aposta_atual }) {
-                        if (!it.turn.isNullOrEmpty()) add(it.turn)
-                        if (!it.river.isNullOrEmpty()) add(it.river)
-                    }
-                }
-
-                cartasParaMostrar.forEach { carta ->
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF353535)),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(carta, color = Color.White, modifier = Modifier.padding(12.dp), fontSize = 20.sp)
-                    }
-                }
-            }
+        Box(modifier = Modifier.align(Alignment.Center)) {
+            CartasComunitarias(cartas = cartas, context)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (minhasCartas.isNotEmpty()) {
-            Text("Suas cartas:", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Medium)
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                minhasCartas.forEach { carta ->
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF4E4E4E)),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(carta, color = Color.White, modifier = Modifier.padding(12.dp), fontSize = 20.sp)
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(24.dp))
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            CartasDoJogador(minhasCartas, context)
         }
 
-        if (error != null) {
-            Text(error ?: "", color = Color.Red)
+        Box(modifier = Modifier.align(Alignment.BottomEnd)) {
+            ControlesDeAcao(
+                jogadores = jogadores,
+                userIdToken = userIdToken,
+                mostrarSlider = mostrarSlider,
+                raiseValue = raiseValue,
+                stackJogador = stackJogador,
+                mesaId = mesaId,
+                accessToken = accessToken,
+                coroutineScope = coroutineScope,
+                onSliderChange = { raiseValue = it },
+                onMostrarSlider = { mostrarSlider = true },
+                onEsconderSlider = { mostrarSlider = false },
+                onRefresh = { refreshMesa() }
+            )
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (jogadores.isEmpty()) {
-                Text("Aguardando jogadores...", color = Color.White)
-            } else {
-                jogadores.forEach { jogador ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(0.9f),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C)),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Column(Modifier.padding(12.dp)) {
-                            Text("🧍 ${jogador.username}", color = Color.White)
-                            Text("💰 Stack: R$ %.2f".format(jogador.stack), color = Color.LightGray)
-                        }
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        val service = RetrofitInstance.retrofit.create(MesaService::class.java)
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Button(onClick = {
-                coroutineScope.launch {
-                    service.foldJWT(mesaId, accessToken)
-                    delay(500)
-                    refreshMesa()
-                }
-            }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
-                Text("Fold", color = Color.White)
-            }
-
-            Button(onClick = {
-                coroutineScope.launch {
-                    service.callJWT(mesaId, accessToken)
-                    delay(500)
-                    refreshMesa()
-                }
-            }, colors = ButtonDefaults.buttonColors(containerColor = Color.Green)) {
-                Text("Call", color = Color.White)
-            }
-
-            Button(onClick = {
-                coroutineScope.launch {
-                    service.checkJWT(mesaId, accessToken)
-                    delay(500)
-                    refreshMesa()
-                }
-            }, colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)) {
-                Text("Check", color = Color.White)
-            }
-
-            Button(onClick = {
-                coroutineScope.launch {
-                    service.raiseJWT(mesaId, 1.0f, accessToken)
-                    delay(500)
-                    refreshMesa()
-                }
-            }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0066CC))) {
-                Text("Raise", color = Color.White)
-            }
-
-            Button(onClick = {
-                coroutineScope.launch {
-                    service.allInJWT(mesaId, accessToken)
-                    delay(500)
-                    refreshMesa()
-                }
-            }, colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow)) {
-                Text("All-in", color = Color.Black)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                coroutineScope.launch {
-                    try {
-                        val response = service.sairDaMesa(mesaId, accessToken)
-                        if (response.isSuccessful) {
-                            Toast.makeText(context, "Saiu da mesa com sucesso!", Toast.LENGTH_SHORT).show()
-                            navController.popBackStack()
-                        } else {
-                            Toast.makeText(context, "Erro ao sair da mesa!", Toast.LENGTH_SHORT).show()
-                        }
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Erro: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
-        ) {
-            Text("Sair da Mesa", color = Color.White)
+        // ✅ DESENHA AVATARES APENAS SE JOGADORES NÃO ESTIVEREM VAZIOS
+        if (jogadores.isNotEmpty()) {
+            AvataresNaMesa(
+                jogadores = jogadores,
+                jogadorDaVezId = jogadorDaVezId,
+                usuarioLogadoId = usuarioLogadoId
+            )
         }
     }
 }

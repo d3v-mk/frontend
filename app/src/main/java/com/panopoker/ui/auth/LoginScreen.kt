@@ -1,6 +1,5 @@
 package com.panopoker.ui.auth
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -67,35 +66,25 @@ fun LoginScreen(
                             val body = response.body()!!
                             val token = body.access_token
 
-                            // ⚡ salva o token
-                            sessionManager.saveAuthToken("Bearer $token")
+                            sessionManager.saveAuthToken(token)
 
-                            // ⚡ decodifica o token pra extrair user_id (opcional, depende do seu backend)
                             val payload = JSONObject(
                                 String(android.util.Base64.decode(token.split(".")[1], android.util.Base64.DEFAULT))
                             )
-                            val userId = payload.getInt("sub") // seu backend usa sub = user_id
+                            val userId = payload.getInt("sub")
 
                             sessionManager.saveUserId(userId)
 
                             launch(Dispatchers.Main) {
-                                Toast.makeText(context, body.msg ?: "Login OK", Toast.LENGTH_SHORT).show()
                                 onLoginSuccess()
                             }
                         } else {
-                            launch(Dispatchers.Main) {
-                                Toast.makeText(context, "Erro: ${response.code()}", Toast.LENGTH_SHORT).show()
-                            }
+                            // erro ao logar (sem Toast)
                         }
                     } catch (e: HttpException) {
-                        launch(Dispatchers.Main) {
-                            Toast.makeText(context, "Erro de login: ${e.code()}", Toast.LENGTH_LONG).show()
-                        }
+                        // erro http (sem Toast)
                     } catch (e: Exception) {
-                        launch(Dispatchers.Main) {
-                            Toast.makeText(context, "Erro: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
-                            e.printStackTrace()
-                        }
+                        e.printStackTrace()
                     }
                 }
             },
