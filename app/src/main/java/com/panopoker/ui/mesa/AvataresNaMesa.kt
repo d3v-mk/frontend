@@ -139,8 +139,8 @@ fun AvataresNaMesa(
                 1 -> Modifier.offset(x = (-250).dp, y = (-20).dp)
                 2 -> Modifier.offset(x = (-200).dp, y = (-70).dp)
                 3 -> Modifier.offset(x = (0).dp, y = (-70).dp)
-                4 -> Modifier.offset(x = (0).dp, y = (40).dp) // falta esse
-                5 -> Modifier.offset(x = (-40).dp, y = (0).dp) // falta esse
+                4 -> Modifier.offset(x = (200).dp, y = (-70).dp) // 
+                5 -> Modifier.offset(x = (250).dp, y = (-20).dp) //
                 else -> Modifier.offset(x = (0).dp, y = (0).dp)
             }
 
