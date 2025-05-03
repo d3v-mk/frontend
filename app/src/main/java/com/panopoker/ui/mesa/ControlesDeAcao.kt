@@ -77,8 +77,16 @@ fun ControlesDeAcao(
                         onClick = {
                             coroutineScope.launch {
                                 try {
-                                    RetrofitInstance.retrofit.create(MesaService::class.java)
-                                        .raiseJWT(mesaId, raiseValue.coerceIn(0.01f, sliderMax), "Bearer $accessToken")
+                                    val service = RetrofitInstance.retrofit.create(MesaService::class.java)
+
+                                    if (raiseValue >= sliderMax) {
+                                        // 💥 ALL-IN!
+                                        service.allInJWT(mesaId, "Bearer $accessToken")
+                                    } else {
+                                        // 🎯 RAISE normal
+                                        service.raiseJWT(mesaId, raiseValue.coerceIn(0.01f, sliderMax), "Bearer $accessToken")
+                                    }
+
                                     onEsconderSlider()
                                     delay(500)
                                     onRefresh()

@@ -52,24 +52,27 @@ fun AvataresNaMesa(
 
         Log.d("AvataresNaMesa", "Renderizando ${jogadores.size} jogadores | Jogador da vez: $jogadorDaVezId")
 
-        jogadores.forEach { jogador ->
-            jogador.vez = (jogadorDaVezId != null && jogador.user_id == jogadorDaVezId)
-            Log.d("AvataresNaMesa", "Jogador ${jogador.username} (user_id: ${jogador.user_id}) -> vez = ${jogador.vez}")
-        }
+        val indexDoLogado = jogadores.indexOfFirst { it.user_id == usuarioLogadoId }
+        val jogadoresRotacionados = if (indexDoLogado >= 0)
+            jogadores.drop(indexDoLogado) + jogadores.take(indexDoLogado)
+        else
+            jogadores
 
         val posicoesFixas = listOf(
             0.dp to 140.dp,
-            -320.dp to 0.dp,
+            -325.dp to 0.dp,
             -200.dp to -140.dp,
             0.dp to -140.dp,
             200.dp to -140.dp,
-            320.dp to 0.dp
+            325.dp to 0.dp
         )
 
-        jogadores.forEach { jogador ->
-            val (offsetX, offsetY) = posicoesFixas.getOrElse(jogador.posicao_cadeira % posicoesFixas.size) { 0.dp to 0.dp }
+        jogadoresRotacionados.forEachIndexed { visualIndex, jogador ->
+            jogador.vez = (jogadorDaVezId != null && jogador.user_id == jogadorDaVezId)
+            Log.d("AvataresNaMesa", "Jogador ${jogador.username} (user_id: ${jogador.user_id}) -> vez = ${jogador.vez}")
 
-            // Avatar
+            val (offsetX, offsetY) = posicoesFixas.getOrElse(visualIndex % posicoesFixas.size) { 0.dp to 0.dp }
+
             Box(
                 modifier = Modifier
                     .offset(x = offsetX, y = offsetY)
@@ -132,25 +135,60 @@ fun AvataresNaMesa(
                         }
                     }
                 }
-            }
 
-            val fichaOffset = when (jogador.posicao_cadeira) {
-                0 -> Modifier.offset(x = 0.dp, y = (60).dp)
-                1 -> Modifier.offset(x = (-250).dp, y = (-20).dp)
-                2 -> Modifier.offset(x = (-200).dp, y = (-70).dp)
-                3 -> Modifier.offset(x = (0).dp, y = (-70).dp)
-                4 -> Modifier.offset(x = (200).dp, y = (-70).dp) // 
-                5 -> Modifier.offset(x = (250).dp, y = (-20).dp) //
-                else -> Modifier.offset(x = (0).dp, y = (0).dp)
-            }
+                // SB / BB fora da coluna pra não empurrar layout
+                if (jogador.is_sb || jogador.is_bb) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = (15).dp)
+                            .zIndex(999f)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (jogador.is_sb) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(Color(0xFF00BCD4), RoundedCornerShape(4.dp))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text("SB", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                            if (jogador.is_bb) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(Color(0xFFFF4081), RoundedCornerShape(4.dp))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text("BB", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
 
-            if (jogador.aposta_atual > 0f) {
-                Box(
-                    modifier = fichaOffset
-                        .align(Alignment.Center)
-                        .zIndex(999f)
-                ) {
-                    FichaAposta(jogador)
+                // Ficha de aposta
+                val fichaOffset = when (visualIndex) {
+                    0 -> Modifier.offset(x = 0.dp, y = -70.dp) //ok
+                    1 -> Modifier.offset(x = 70.dp, y = -15.dp) //ok
+                    2 -> Modifier.offset(x = 0.dp, y = 70.dp) //ok
+                    3 -> Modifier.offset(x = 0.dp, y = 70.dp) //ok
+                    4 -> Modifier.offset(x = 0.dp, y = 70.dp) //ok
+                    5 -> Modifier.offset(x = -70.dp, y = -15.dp) //ok
+                    else -> Modifier.offset(0.dp, 0.dp)
+                }
+
+                if (jogador.aposta_atual > 0f) {
+                    Box(
+                        modifier = fichaOffset
+                            .align(Alignment.Center)
+                            .zIndex(999f)
+                    ) {
+                        FichaAposta(jogador)
+                    }
                 }
             }
         }
