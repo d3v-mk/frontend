@@ -7,11 +7,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -19,13 +21,87 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.panopoker.R
 import com.panopoker.model.Jogador
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import kotlinx.coroutines.delay
 
 @Composable
-fun FichaAposta(jogador: Jogador) {
+fun CartaComAnimacaoFlip(
+    frenteResId: Int,
+    delayMs: Int,
+    startTrigger: Boolean
+) {
+    val rotation = remember { Animatable(180f) }
+    val cameraDistance = 12 * LocalContext.current.resources.displayMetrics.density
+
+    val largura by remember { derivedStateOf { if (rotation.value <= 90f) 33.dp else 20.dp } }
+    val altura by remember { derivedStateOf { if (rotation.value <= 90f) 48.dp else 30.dp } }
+
+    LaunchedEffect(startTrigger) {
+        if (startTrigger) {
+            delay(delayMs.toLong())
+            rotation.animateTo(
+                targetValue = 0f,
+                animationSpec = tween(durationMillis = 1500)
+            )
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .width(largura)
+            .height(altura)
+            .graphicsLayer {
+                rotationY = rotation.value
+                this.cameraDistance = cameraDistance
+            }
+    ) {
+        if (rotation.value <= 90f) {
+            Card(
+                shape = RoundedCornerShape(4.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Image(
+                    painter = painterResource(id = frenteResId),
+                    contentDescription = "Carta Frente",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        } else {
+            Card(
+                shape = RoundedCornerShape(4.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { rotationY = 180f }
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.carta_back),
+                    contentDescription = "Carta Verso",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+    }
+}
+
+
+
+
+@Composable
+fun FichaAposta(
+    valor: Float,
+    modifier: Modifier = Modifier
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier
+        modifier = modifier
             .background(Color(0xFF1B1B1B), RoundedCornerShape(6.dp))
             .padding(horizontal = 6.dp, vertical = 2.dp)
     ) {
@@ -35,7 +111,7 @@ fun FichaAposta(jogador: Jogador) {
             modifier = Modifier.size(18.dp)
         )
         Text(
-            text = "%.2f".format(jogador.aposta_atual),
+            text = "%.2f".format(valor),
             color = Color.White,
             fontSize = 12.sp
         )
@@ -46,41 +122,67 @@ fun FichaAposta(jogador: Jogador) {
 fun AvataresNaMesa(
     jogadores: List<Jogador>,
     jogadorDaVezId: Int?,
-    usuarioLogadoId: Int
+    usuarioLogadoId: Int,
+    faseDaRodada: String?
 ) {
-    Box(modifier = Modifier.fillMaxSize().zIndex(99f)) {
+    val mostrarShowdown = faseDaRodada.equals("showdown", ignoreCase = true)
+    val context = LocalContext.current
 
-        Log.d("AvataresNaMesa", "Renderizando ${jogadores.size} jogadores | Jogador da vez: $jogadorDaVezId")
+    val totalSeats = 6
+    val seats: List<Jogador?> = (0 until totalSeats).map { seatIdx ->
+        jogadores.find { it.posicao_cadeira == seatIdx }
+    }
+    val userSeat = jogadores.find { it.user_id == usuarioLogadoId }?.posicao_cadeira ?: 0
 
-        val indexDoLogado = jogadores.indexOfFirst { it.user_id == usuarioLogadoId }
-        val jogadoresRotacionados = if (indexDoLogado >= 0)
-            jogadores.drop(indexDoLogado) + jogadores.take(indexDoLogado)
-        else
-            jogadores
+    val posicoes = listOf(
+        0.dp to 140.dp,
+        (-325).dp to 0.dp,
+        (-200).dp to (-140).dp,
+        0.dp to (-140).dp,
+        200.dp to (-140).dp,
+        325.dp to 0.dp
+    )
+    val holeCardOffsets = listOf(
+        0.dp to (-120).dp,
+        (0).dp to (0).dp,
+        (-150).dp to (-140).dp,
+        0.dp to (-140).dp,
+        150.dp to (-140).dp,
+        300.dp to (-100).dp
+    )
+    val chipOffsets = listOf(
+        0.dp to (-75).dp,
+        70.dp to (-20).dp,
+        0.dp to 0.dp,
+        0.dp to 0.dp,
+        0.dp to 0.dp,
+        0.dp to 0.dp
+    )
 
-        val posicoesFixas = listOf(
-            0.dp to 140.dp,
-            -325.dp to 0.dp,
-            -200.dp to -140.dp,
-            0.dp to -140.dp,
-            200.dp to -140.dp,
-            325.dp to 0.dp
-        )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .zIndex(99f)
+    ) {
+        Log.d("AvataresNaMesa", "Cadeiras: $seats | UserSeat: $userSeat | Fase: $faseDaRodada")
 
-        jogadoresRotacionados.forEachIndexed { visualIndex, jogador ->
-            jogador.vez = (jogadorDaVezId != null && jogador.user_id == jogadorDaVezId)
-            Log.d("AvataresNaMesa", "Jogador ${jogador.username} (user_id: ${jogador.user_id}) -> vez = ${jogador.vez}")
-
-            val (offsetX, offsetY) = posicoesFixas.getOrElse(visualIndex % posicoesFixas.size) { 0.dp to 0.dp }
+        seats.forEachIndexed { seatIndex, jogador ->
+            if (jogador == null) return@forEachIndexed
+            val visualIndex = (seatIndex - userSeat + totalSeats) % totalSeats
+            val (dx, dy) = posicoes[visualIndex]
+            val (cardOffsetX, cardOffsetY) = holeCardOffsets[visualIndex]
+            val (chipOffsetX, chipOffsetY) = chipOffsets[visualIndex]
+            jogador.vez = jogadorDaVezId == jogador.user_id
 
             Box(
                 modifier = Modifier
-                    .offset(x = offsetX, y = offsetY)
+                    .offset(x = dx, y = dy)
                     .align(Alignment.Center)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.zIndex(1f)
                 ) {
                     Card(
                         shape = RoundedCornerShape(50),
@@ -96,18 +198,16 @@ fun AvataresNaMesa(
                         Image(
                             painter = painterResource(id = R.drawable.avatar_default),
                             contentDescription = "Avatar",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
-
-                    // Nome e saldo
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = jogador.username,
+                            jogador.username,
                             color = Color.White,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
@@ -115,19 +215,16 @@ fun AvataresNaMesa(
                         Box(
                             modifier = Modifier
                                 .background(Color(0xFF555555), RoundedCornerShape(6.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                .padding(6.dp)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Image(
                                     painter = painterResource(id = R.drawable.ficha_poker),
                                     contentDescription = null,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Text(
-                                    text = "%.2f".format(jogador.saldo_atual),
+                                    "%.2f".format(jogador.saldo_atual),
                                     color = Color(0xFFFFD700),
                                     fontSize = 12.sp
                                 )
@@ -136,58 +233,107 @@ fun AvataresNaMesa(
                     }
                 }
 
-                // SB / BB fora da coluna pra não empurrar layout
-                if (jogador.is_sb || jogador.is_bb) {
+                if (jogador.aposta_atual > 0f) {
                     Box(
                         modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .offset(y = (15).dp)
-                            .zIndex(999f)
+                            .align(Alignment.Center)
+                            .offset(x = chipOffsetX, y = chipOffsetY)
+                            .zIndex(1f)
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (jogador.is_sb) {
-                                Box(
-                                    modifier = Modifier
-                                        .background(Color(0xFF00BCD4), RoundedCornerShape(4.dp))
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Text("SB", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                            if (jogador.is_bb) {
-                                Box(
-                                    modifier = Modifier
-                                        .background(Color(0xFFFF4081), RoundedCornerShape(4.dp))
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Text("BB", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                }
+                        FichaAposta(valor = jogador.aposta_atual)
+                    }
+                }
+
+                if (!mostrarShowdown) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(x = cardOffsetX, y = cardOffsetY)
+                            .zIndex(2f)
+                    ) {
+                        repeat(2) {
+                            Card(
+                                shape = RoundedCornerShape(4.dp),
+                                modifier = Modifier
+                                    .width(33.dp)
+                                    .height(48.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.carta_back),
+                                    contentDescription = "Carta virada",
+                                    contentScale = ContentScale.Fit,
+                                    modifier = Modifier.fillMaxSize()
+                                )
                             }
                         }
                     }
                 }
 
-                // Ficha de aposta
-                val fichaOffset = when (visualIndex) {
-                    0 -> Modifier.offset(x = 0.dp, y = -70.dp) //ok
-                    1 -> Modifier.offset(x = 70.dp, y = -15.dp) //ok
-                    2 -> Modifier.offset(x = 0.dp, y = 70.dp) //ok
-                    3 -> Modifier.offset(x = 0.dp, y = 70.dp) //ok
-                    4 -> Modifier.offset(x = 0.dp, y = 70.dp) //ok
-                    5 -> Modifier.offset(x = -70.dp, y = -15.dp) //ok
-                    else -> Modifier.offset(0.dp, 0.dp)
+                if (mostrarShowdown) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(x = cardOffsetX, y = cardOffsetY)
+                            .zIndex(2f)
+                    ) {
+                        jogador.cartas.forEachIndexed { cartaIndex, carta ->
+                            val rankCode = carta.dropLast(1)
+                            val suitCode = carta.last()
+                            val rankName = when (rankCode) {
+                                "2" -> "dois"; "3" -> "tres"; "4" -> "quatro"; "5" -> "cinco"
+                                "6" -> "seis"; "7" -> "sete"; "8" -> "oito"; "9" -> "nove"; "10" -> "dez"
+                                "J" -> "valete"; "Q" -> "dama"; "K" -> "rei"; "A" -> "as"
+                                else -> rankCode.lowercase()
+                            }
+                            val suitName = when (suitCode) {
+                                'P' -> "paus"; 'C' -> "copas"; 'E' -> "espadas"; 'O' -> "ouros"
+                                else -> ""
+                            }
+                            val resId = context.resources.getIdentifier(
+                                "${rankName}_de_${suitName}",
+                                "drawable",
+                                context.packageName
+                            )
+                            if (resId != 0) {
+                                CartaComAnimacaoFlip(
+                                    frenteResId = resId,
+                                    delayMs = jogador.posicao_cadeira * 600 + cartaIndex * 400,
+                                    startTrigger = true
+                                )
+                            }
+                        }
+                    }
                 }
 
-                if (jogador.aposta_atual > 0f) {
+                if (jogador.is_sb || jogador.is_bb) {
                     Box(
-                        modifier = fichaOffset
-                            .align(Alignment.Center)
-                            .zIndex(999f)
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = 20.dp)
+                            .zIndex(3f)
                     ) {
-                        FichaAposta(jogador)
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            if (jogador.is_sb) {
+                                Text(
+                                    "SB",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            if (jogador.is_bb) {
+                                Text(
+                                    "BB",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
                 }
             }

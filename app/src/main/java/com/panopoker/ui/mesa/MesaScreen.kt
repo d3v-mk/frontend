@@ -21,7 +21,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 
-
 // Componentes
 import com.panopoker.ui.mesa.MesaImagemDeFundo
 import com.panopoker.ui.mesa.BotaoSair
@@ -38,6 +37,9 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     val userIdToken = session.getUserIdFromToken(accessToken) ?: -99
     val coroutineScope = rememberCoroutineScope()
 
+    // Estado da fase da rodada
+    var faseDaRodada by remember { mutableStateOf<String?>(null) }
+
     var jogadores by remember { mutableStateOf<List<Jogador>>(emptyList()) }
     var cartas by remember { mutableStateOf<CartasComunitarias?>(null) }
     var minhasCartas by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -45,7 +47,6 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     var stackJogador by remember { mutableFloatStateOf(1f) }
     var raiseValue by remember { mutableFloatStateOf(0f) }
     var mostrarSlider by remember { mutableStateOf(false) }
-
 
     val usuarioLogadoId = session.fetchUserId()
 
@@ -67,24 +68,27 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
 
                 val responseJogadores = service.getJogadoresDaMesa(mesaId, "Bearer $accessToken")
                 val responseMinhasCartas = service.getMinhasCartas(mesaId, "Bearer $accessToken")
-                val responseCartasComunitarias = service.getCartasComunitarias(mesaId, "Bearer $accessToken") // <-- esse!
+                val responseCartasComunitarias = service.getCartasComunitarias(mesaId, "Bearer $accessToken")
 
                 val jogadoresRecebidos = responseJogadores.body() ?: emptyList()
 
+                // Atualiza a fase da rodada
+                faseDaRodada = mesaBody?.estado_da_rodada
+
                 Log.d("🔥 MesaDebug", "📥 Mesa ID: $mesaId")
-                Log.d("🔥 MesaDebug", "📥 Estado da rodada: ${mesaBody?.estado_da_rodada}")
-                Log.d("🔥 MesaDebug", "📥 Jogador da vez (ID): ${mesaBody?.jogador_da_vez}")
-                Log.d("🔥 MesaDebug", "📥 Flop: ${responseCartasComunitarias.body()?.cartas_comunitarias?.flop}")
-                Log.d("🔥 MesaDebug", "📥 Turn: ${responseCartasComunitarias.body()?.cartas_comunitarias?.turn}")
-                Log.d("🔥 MesaDebug", "📥 River: ${responseCartasComunitarias.body()?.cartas_comunitarias?.river}")
-                Log.d("🔥 MesaDebug", "📥 Jogadores recebidos: ${jogadoresRecebidos.size}")
+                Log.d("🔥 MesaDebug", "📥 Estado da rodada: ${'$'}{mesaBody?.estado_da_rodada}")
+                Log.d("🔥 MesaDebug", "📥 Jogador da vez (ID): ${'$'}{mesaBody?.jogador_da_vez}")
+                Log.d("🔥 MesaDebug", "📥 Flop: ${'$'}{responseCartasComunitarias.body()?.cartas_comunitarias?.flop}")
+                Log.d("🔥 MesaDebug", "📥 Turn: ${'$'}{responseCartasComunitarias.body()?.cartas_comunitarias?.turn}")
+                Log.d("🔥 MesaDebug", "📥 River: ${'$'}{responseCartasComunitarias.body()?.cartas_comunitarias?.river}")
+                Log.d("🔥 MesaDebug", "📥 Jogadores recebidos: ${'$'}{jogadoresRecebidos.size}")
 
                 jogadoresRecebidos.forEach {
-                    Log.d("🔥 MesaDebug", "👤 ${it.username} | ID: ${it.user_id} | Pos: ${it.posicao_cadeira} | Stack: ${it.saldo_atual} | Foldado: ${it.foldado}")
+                    Log.d("🔥 MesaDebug", "👤 ${'$'}{it.username} | ID: ${'$'}{it.user_id} | Pos: ${'$'}{it.posicao_cadeira} | Stack: ${'$'}{it.saldo_atual} | Foldado: ${'$'}{it.foldado}")
                 }
 
                 jogadores = jogadoresRecebidos
-                cartas = responseCartasComunitarias.body()?.cartas_comunitarias // <-- aqui você usa o response certo
+                cartas = responseCartasComunitarias.body()?.cartas_comunitarias
                 jogadorDaVezId = mesaBody?.jogador_da_vez
                 minhasCartas = responseMinhasCartas.body() ?: emptyList()
 
@@ -92,22 +96,16 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                     stackJogador = it.saldo_atual
                 }
 
-                Log.d("🔥 MesaDebug", "📌 Minhas cartas: $minhasCartas")
+                Log.d("🔥 MesaDebug", "📌 Minhas cartas: ${'$'}minhasCartas")
 
             } catch (e: Exception) {
-                Log.e("🔥 MesaDebug", "❌ Erro ao atualizar mesa: ${e.message}")
+                Log.e("🔥 MesaDebug", "❌ Erro ao atualizar mesa: ${'$'}{e.message}")
             }
         }
     }
 
-
-
-
-
-
-
     LaunchedEffect(Unit) {
-        refreshMesa() // 🚀 Faz o primeiro refresh IMEDIATO
+        refreshMesa() // primeiro refresh
         delay(500)
         while (true) {
             refreshMesa()
@@ -116,23 +114,18 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-
         Box(modifier = Modifier.align(Alignment.Center)) {
             MesaImagemDeFundo()
         }
-
         Box(modifier = Modifier.align(Alignment.TopStart)) {
             BotaoSair(context, mesaId, accessToken, coroutineScope)
         }
-
         Box(modifier = Modifier.align(Alignment.Center)) {
             CartasComunitarias(cartas = cartas, context)
         }
-
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             CartasDoJogador(minhasCartas, context)
         }
-
         Box(modifier = Modifier.align(Alignment.BottomEnd)) {
             ControlesDeAcao(
                 jogadores = jogadores,
@@ -150,12 +143,13 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             )
         }
 
-        // ✅ DESENHA AVATARES APENAS SE JOGADORES NÃO ESTIVEREM VAZIOS
+        // Avatares com faseDaRodada incluída
         if (jogadores.isNotEmpty()) {
             AvataresNaMesa(
                 jogadores = jogadores,
                 jogadorDaVezId = jogadorDaVezId,
-                usuarioLogadoId = usuarioLogadoId
+                usuarioLogadoId = usuarioLogadoId,
+                faseDaRodada = faseDaRodada
             )
         }
     }
