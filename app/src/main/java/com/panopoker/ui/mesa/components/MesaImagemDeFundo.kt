@@ -1,4 +1,4 @@
-package com.panopoker.ui.mesa
+package com.panopoker.ui.mesa.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.requiredHeight

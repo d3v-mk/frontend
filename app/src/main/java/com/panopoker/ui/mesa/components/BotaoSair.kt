@@ -1,4 +1,4 @@
-package com.panopoker.ui.mesa
+package com.panopoker.ui.mesa.components
 
 import android.app.Activity
 import android.content.Context

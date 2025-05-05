@@ -1,4 +1,4 @@
-package com.panopoker.ui.mesa
+package com.panopoker.ui.mesa.components
 
 import android.content.Context
 import androidx.compose.foundation.Image
@@ -12,33 +12,51 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
+import com.panopoker.model.CartasComunitarias
 import com.panopoker.ui.utils.getCartaDrawable
+import androidx.compose.ui.Alignment
 
 @Composable
-fun CartasDoJogador(minhasCartas: List<String>, context: Context) {
-    if (minhasCartas.isNotEmpty()) {
+fun CartasComunitarias(cartas: CartasComunitarias?, context: Context) {
+    cartas?.let {
+        val todas = mutableListOf<String>()
+
+        // Só adiciona o flop se tiver
+        if (it.flop.isNotEmpty()) {
+            todas.addAll(it.flop)
+        }
+
+        // Só adiciona o turn se já foi distribuído
+        if (!it.turn.isNullOrBlank()) {
+            todas.add(it.turn)
+        }
+
+        // Só adiciona o river se já foi distribuído
+        if (!it.river.isNullOrBlank()) {
+            todas.add(it.river)
+        }
+
         Row(
-            modifier = Modifier
-                .offset(90.dp, -45.dp) // O .align() saiu
-                .zIndex(1f),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.wrapContentSize()
         ) {
-            minhasCartas.forEach { carta ->
+            todas.forEach { carta ->
                 val id = getCartaDrawable(context, carta)
                 Box(
                     modifier = Modifier
-                        .size(width = 45.dp, height = 65.dp)
+                        .size(width = 50.dp, height = 75.dp)
+                        .offset(x = -40.dp, y = -5.dp)
                         .background(Color.White, RoundedCornerShape(6.dp))
                         .border(1.dp, Color.Black, RoundedCornerShape(6.dp))
                 ) {
                     Image(
                         painter = painterResource(id),
                         contentDescription = null,
-                        contentScale = ContentScale.Fit,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(2.dp)
+                            .padding(2.dp),
+                        contentScale = ContentScale.Fit
                     )
                 }
             }

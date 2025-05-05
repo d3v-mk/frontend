@@ -31,6 +31,8 @@ import com.panopoker.model.Mesa
 import com.panopoker.ui.mesa.MesaActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.compose.material3.Divider
+
 
 @Composable
 fun LobbyScreen(navController: NavController) {
@@ -98,7 +100,7 @@ fun LobbyScreen(navController: NavController) {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
+                Divider()
 
                 DrawerItem("Perfil")
                 DrawerItem("Saldo: R$123,45")

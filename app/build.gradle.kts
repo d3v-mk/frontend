@@ -40,24 +40,28 @@ android {
 }
 
 dependencies {
+    // Compose core
+    implementation("androidx.compose.ui:ui:1.5.1")
+    implementation("androidx.compose.ui:ui-graphics:1.5.1")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.5.1")
+    implementation("androidx.compose.ui:ui-util:1.5.1")
+    implementation("androidx.compose.foundation:foundation:1.5.1")
+    implementation("androidx.compose.material3:material3:1.1.2")
 
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    // Outros essenciais
+    implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
+
+    // Testes e Preview
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.1")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.5.1")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.1")
 }

@@ -1,4 +1,4 @@
-package com.panopoker.ui.mesa
+package com.panopoker.ui.mesa.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -37,6 +37,7 @@ fun ControlesDeAcao(
     val maiorAposta = jogadores.maxOfOrNull { it.aposta_atual } ?: 0f
     val textoAcao = if (maiorAposta > 0f && apostaJogador < maiorAposta) "Call" else "Check"
     val corBotao = if (textoAcao == "Check") Color.Gray else Color.Green
+    val raiseLimpo = "%.2f".format(raiseValue.coerceIn(0.01f, sliderMax)).replace(",", ".").toFloat()
 
     if (mostrarSlider) {
         Box(
@@ -73,6 +74,7 @@ fun ControlesDeAcao(
                     ) {
                         Text("Cancelar", color = Color.White, fontSize = 12.sp)
                     }
+
                     Button(
                         onClick = {
                             coroutineScope.launch {
@@ -84,7 +86,7 @@ fun ControlesDeAcao(
                                         service.allInJWT(mesaId, "Bearer $accessToken")
                                     } else {
                                         // 🎯 RAISE normal
-                                        service.raiseJWT(mesaId, raiseValue.coerceIn(0.01f, sliderMax), "Bearer $accessToken")
+                                        service.raiseJWT(mesaId, raiseLimpo, "Bearer $accessToken")
                                     }
 
                                     onEsconderSlider()
