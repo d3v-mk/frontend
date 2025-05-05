@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.panopoker.R
 import com.panopoker.model.Jogador
 import androidx.compose.ui.zIndex
+import androidx.compose.ui.text.font.FontWeight
 
 
 @Composable
@@ -30,7 +31,7 @@ fun AvatarJogador(jogador: Jogador) {
             modifier = Modifier
                 .size(64.dp)
                 .border(
-                    2.dp,
+                    3.dp,
                     if (jogador.vez) Color.Yellow else Color.Gray,
                     RoundedCornerShape(50)
                 ),
@@ -45,19 +46,26 @@ fun AvatarJogador(jogador: Jogador) {
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+            // Nome
             Text(
                 jogador.username,
                 color = Color.White,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
             )
+
+            // Saldo + SB/BB
             Box(
                 modifier = Modifier
                     .background(Color(0xFF555555), RoundedCornerShape(6.dp))
-                    .padding(6.dp)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Image(
                         painter = painterResource(id = R.drawable.ficha_poker),
                         contentDescription = null,
@@ -68,6 +76,23 @@ fun AvatarJogador(jogador: Jogador) {
                         color = Color(0xFFFFD700),
                         fontSize = 12.sp
                     )
+
+                    if (jogador.is_sb) {
+                        Text(
+                            "SB",
+                            color = Color.Cyan,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    if (jogador.is_bb) {
+                        Text(
+                            "BB",
+                            color = Color.Magenta,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

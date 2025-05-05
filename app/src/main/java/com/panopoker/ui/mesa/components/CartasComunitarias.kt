@@ -46,7 +46,7 @@ fun CartasComunitarias(cartas: CartasComunitarias?, context: Context) {
                 Box(
                     modifier = Modifier
                         .size(width = 50.dp, height = 75.dp)
-                        .offset(x = -40.dp, y = -5.dp)
+                        .offset(x = (-40).dp, y = (-5).dp)
                         .background(Color.White, RoundedCornerShape(6.dp))
                         .border(1.dp, Color.Black, RoundedCornerShape(6.dp))
                 ) {

@@ -50,20 +50,20 @@ fun AvataresNaMesa(
         325.dp to 0.dp
     )
     val holeCardOffsets = listOf(
-        0.dp to (0).dp,
-        (0).dp to (0).dp,
-        (0).dp to (0).dp,
-        0.dp to (-140).dp,
-        150.dp to (-140).dp,
-        300.dp to (-100).dp
+        (-30).dp to 0.dp,
+        (-30).dp to 0.dp,
+        (-30).dp to 0.dp,
+        (-30).dp to 0.dp,
+        (-30).dp to 0.dp,
+        30.dp to 0.dp
     )
     val chipOffsets = listOf(
         0.dp to (-75).dp,
-        70.dp to (-20).dp,
-        0.dp to 0.dp,
-        0.dp to 0.dp,
-        0.dp to 0.dp,
-        0.dp to 0.dp
+        70.dp to (-15).dp,
+        0.dp to 65.dp,
+        0.dp to 65.dp,
+        0.dp to 65.dp,
+        (-70).dp to (-15).dp
     )
 
     Box(
@@ -72,6 +72,18 @@ fun AvataresNaMesa(
             .zIndex(99f)
     ) {
         Log.d("AvataresNaMesa", "Cadeiras: $seats | UserSeat: $userSeat | Fase: $faseDaRodada")
+
+        // 💰 Pote total visível no topo central
+        if ((mostrarFlop || mostrarTurn || mostrarRiver || mostrarShowdown) && poteTotal > 0f) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(x = (-90).dp, y = 125.dp)
+                    .zIndex(4f)
+            ) {
+                FichaAposta(valor = poteTotal)
+            }
+        }
 
         seats.forEachIndexed { seatIndex, jogador ->
             if (jogador == null) return@forEachIndexed
@@ -132,47 +144,7 @@ fun AvataresNaMesa(
                         cadeira = jogador.posicao_cadeira
                     )
                 }
-
-                if (jogador.is_sb || jogador.is_bb) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .offset(y = 20.dp)
-                            .zIndex(3f)
-                    ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            if (jogador.is_sb) {
-                                Text(
-                                    "SB",
-                                    color = Color.White,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            if (jogador.is_bb) {
-                                Text(
-                                    "BB",
-                                    color = Color.White,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // 💰 Pote total visível no topo central
-        if ((mostrarFlop || mostrarTurn || mostrarRiver || mostrarShowdown) && poteTotal > 0f) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = 60.dp)
-                    .zIndex(4f)
-            ) {
-                FichaAposta(valor = poteTotal)
             }
         }
     }
-}
+}///

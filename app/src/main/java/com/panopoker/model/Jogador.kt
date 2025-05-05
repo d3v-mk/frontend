@@ -12,7 +12,7 @@ data class Jogador(
     val foldado: Boolean,
     val rodada_ja_agiu: Boolean,
     val cartas: List<String>,
-    var vez: Boolean = false,
+    var vez: Boolean,
     val posicao_cadeira: Int = 0,
     val participando_da_rodada: Boolean,
     val is_sb: Boolean,
