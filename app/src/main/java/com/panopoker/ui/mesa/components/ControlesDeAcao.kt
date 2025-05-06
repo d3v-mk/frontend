@@ -16,6 +16,13 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 
+import android.media.MediaPlayer
+import androidx.compose.ui.platform.LocalContext
+import com.panopoker.R
+
+
+
+
 @Composable
 fun ControlesDeAcao(
     jogadores: List<Jogador>,
@@ -38,6 +45,22 @@ fun ControlesDeAcao(
     val textoAcao = if (maiorAposta > 0f && apostaJogador < maiorAposta) "Call" else "Check"
     val corBotao = if (textoAcao == "Check") Color.Gray else Color.Green
     val raiseLimpo = "%.2f".format(raiseValue.coerceIn(0.01f, sliderMax)).replace(",", ".").toFloat()
+
+
+    val context = LocalContext.current
+
+    fun tocarSom(resId: Int) {
+        try {
+            val mediaPlayer = MediaPlayer.create(context, resId)
+            mediaPlayer.setOnCompletionListener {
+                it.release()
+            }
+            mediaPlayer.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
 
     if (mostrarSlider) {
         Box(
@@ -115,6 +138,7 @@ fun ControlesDeAcao(
                         try {
                             RetrofitInstance.retrofit.create(MesaService::class.java)
                                 .foldJWT(mesaId, "Bearer $accessToken")
+                            tocarSom(R.raw.fold) // som de f old ao apertar o botao
                             delay(500)
                             onRefresh()
                         } catch (_: Exception) {}
@@ -131,8 +155,13 @@ fun ControlesDeAcao(
                     coroutineScope.launch {
                         try {
                             val service = RetrofitInstance.retrofit.create(MesaService::class.java)
-                            if (textoAcao == "Call") service.callJWT(mesaId, "Bearer $accessToken")
-                            else service.checkJWT(mesaId, "Bearer $accessToken")
+                            if (textoAcao == "Call") {
+                                //tocarSom(R.raw.call) // som para CALL
+                                service.callJWT(mesaId, "Bearer $accessToken")
+                            } else {
+                                tocarSom(R.raw.check) // som para CHECK
+                                service.checkJWT(mesaId, "Bearer $accessToken")
+                            }
                             delay(500)
                             onRefresh()
                         } catch (_: Exception) {}

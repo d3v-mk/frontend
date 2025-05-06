@@ -17,10 +17,28 @@ import com.panopoker.R
 import com.panopoker.model.Jogador
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.runtime.*
+import kotlinx.coroutines.delay
+
+
 
 
 @Composable
 fun AvatarJogador(jogador: Jogador) {
+
+    val tempoTotal = 20 // timer
+    var tempoRestante by remember { mutableStateOf(tempoTotal) } // timer
+
+    LaunchedEffect(jogador.vez) { // timer
+        if (jogador.vez) {
+            tempoRestante = tempoTotal
+            while (tempoRestante > 0) {
+                delay(1000)
+                tempoRestante--
+            }
+        }
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -43,6 +61,17 @@ fun AvatarJogador(jogador: Jogador) {
                 modifier = Modifier.fillMaxSize()
             )
         }
+
+        if (jogador.vez) { //exibe o tempo restante na tela (15s)
+            Text(
+                text = "Tempo: ${tempoRestante}s",
+                color = Color.Yellow,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
