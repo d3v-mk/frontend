@@ -3,6 +3,10 @@ package com.panopoker.data.session
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.panopoker.data.network.RetrofitInstance
+import com.panopoker.data.service.UsuarioService
+import retrofit2.HttpException
+import java.io.IOException
 
 class SessionManager(context: Context) {
 
@@ -12,6 +16,8 @@ class SessionManager(context: Context) {
     companion object {
         private const val KEY_TOKEN = "access_token"
         private const val KEY_USER_ID = "user_id"
+        private const val KEY_USERNAME = "username"
+
     }
 
     fun saveAuthToken(token: String) {
@@ -33,6 +39,36 @@ class SessionManager(context: Context) {
     fun fetchUserId(): Int {
         return prefs.getInt(KEY_USER_ID, -1)
     }
+
+    fun fetchUserName(): String? {
+        return prefs.getString(KEY_USERNAME, null)
+    }
+
+    fun saveUserName(username: String) {
+        prefs.edit {
+            putString(KEY_USERNAME, username)
+        }
+    }
+
+    // Função para pegar o saldo do usuário
+    suspend fun fetchUserBalance(): Float {
+        val token = fetchAuthToken() ?: return 0.0f
+        val api = RetrofitInstance.retrofit.create(UsuarioService::class.java)
+        try {
+            val response = api.getSaldo("Bearer $token")
+            if (response.isSuccessful) {
+                return response.body()?.saldo ?: 0.0f
+            }
+        } catch (e: HttpException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return 0.0f
+    }
+
+
+
 
     fun clearSession() {
         prefs.edit {

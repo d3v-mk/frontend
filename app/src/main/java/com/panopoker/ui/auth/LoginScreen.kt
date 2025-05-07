@@ -75,6 +75,9 @@ fun LoginScreen(
 
                             sessionManager.saveUserId(userId)
 
+                            // Agora vamos salvar o nome do usuário
+                            sessionManager.saveUserName(username)
+
                             launch(Dispatchers.Main) {
                                 onLoginSuccess()
                             }
