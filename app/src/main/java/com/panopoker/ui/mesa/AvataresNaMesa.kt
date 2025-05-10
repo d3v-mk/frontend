@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -71,9 +72,9 @@ fun AvataresNaMesa(
             .fillMaxSize()
             .zIndex(99f)
     ) {
-        Log.d("AvataresNaMesa", "Cadeiras: $seats | UserSeat: $userSeat | Fase: $faseDaRodada")
+        Log.d("AvataresNaMesa", "Seats: $seats | UserSeat: $userSeat | Phase: $faseDaRodada")
 
-        // 💰 Pote total visível no topo central
+        // Pote total
         if ((mostrarFlop || mostrarTurn || mostrarRiver || mostrarShowdown) && poteTotal > 0f) {
             Box(
                 modifier = Modifier
@@ -85,66 +86,74 @@ fun AvataresNaMesa(
             }
         }
 
-        seats.forEachIndexed { seatIndex, jogador ->
-            if (jogador == null) return@forEachIndexed
-            val visualIndex = (seatIndex - userSeat + totalSeats) % totalSeats
-            val (dx, dy) = posicoes[visualIndex]
-            val (cardOffsetX, cardOffsetY) = holeCardOffsets[visualIndex]
-            val (chipOffsetX, chipOffsetY) = chipOffsets[visualIndex]
-            jogador.vez = jogadorDaVezId == jogador.user_id
+        seats.forEachIndexed { seatIndex, jogadorOriginal ->
+            if (jogadorOriginal == null) return@forEachIndexed
+            key(jogadorOriginal.user_id) {
+                // calcula visualIndex e offsets
+                val visualIndex = (seatIndex - userSeat + totalSeats) % totalSeats
+                val (dx, dy) = posicoes[visualIndex]
+                val (cardOffsetX, cardOffsetY) = holeCardOffsets[visualIndex]
+                val (chipOffsetX, chipOffsetY) = chipOffsets[visualIndex]
 
-            Box(
-                modifier = Modifier
-                    .offset(x = dx, y = dy)
-                    .align(Alignment.Center)
-            ) {
-                AvatarJogador(jogador)
+                // define se é vez sem mutar o objeto original
+                val isVez = jogadorDaVezId == jogadorOriginal.user_id
+                val jogador = jogadorOriginal.copy(vez = isVez)
 
-                if (
-                    jogador.aposta_atual > 0f &&
-                    (jogador.rodada_ja_agiu || jogador.is_sb || jogador.is_bb) &&
-                    jogador.aposta_atual <= apostaAtualMesa &&
-                    !mostrarShowdown
+                Box(
+                    modifier = Modifier
+                        .offset(x = dx, y = dy)
+                        .align(Alignment.Center)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .offset(x = chipOffsetX, y = chipOffsetY)
-                            .zIndex(1f)
-                    ) {
-                        FichaAposta(valor = jogador.aposta_atual)
-                    }
-                }
+                    AvatarJogador(jogador)
 
-
-                if (!mostrarShowdown) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy((-6).dp),
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .offset(x = cardOffsetX, y = cardOffsetY)
-                            .zIndex(2f)
+                    // fichas de aposta
+                    if (
+                        jogador.aposta_atual > 0f &&
+                        (jogador.rodada_ja_agiu || jogador.is_sb || jogador.is_bb) &&
+                        jogador.aposta_atual <= apostaAtualMesa &&
+                        !mostrarShowdown
                     ) {
-                        repeat(2) {
-                            CartaComAnimacaoFlip(
-                                frenteResId = R.drawable.carta_back,
-                                delayMs = 0,
-                                startTrigger = false
-                            )
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .offset(x = chipOffsetX, y = chipOffsetY)
+                                .zIndex(1f)
+                        ) {
+                            FichaAposta(valor = jogador.aposta_atual)
                         }
                     }
-                }
 
-                if (mostrarShowdown) {
-                    HoleCards(
-                        cartas = jogador.cartas,
-                        delayBaseMs = jogador.posicao_cadeira * 600,
-                        offsetX = cardOffsetX.value.toInt(),
-                        offsetY = cardOffsetY.value.toInt(),
-                        cadeira = jogador.posicao_cadeira
-                    )
+                    // cartas de hole (back)
+                    if (!mostrarShowdown) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy((-6).dp),
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .offset(x = cardOffsetX, y = cardOffsetY)
+                                .zIndex(2f)
+                        ) {
+                            repeat(2) {
+                                CartaComAnimacaoFlip(
+                                    frenteResId = R.drawable.carta_back,
+                                    delayMs = 0,
+                                    startTrigger = false
+                                )
+                            }
+                        }
+                    }
+
+                    // showdown: mostra as cartas
+                    if (mostrarShowdown) {
+                        HoleCards(
+                            cartas = jogador.cartas,
+                            delayBaseMs = jogador.posicao_cadeira * 600,
+                            offsetX = cardOffsetX.value.toInt(),
+                            offsetY = cardOffsetY.value.toInt(),
+                            cadeira = jogador.posicao_cadeira
+                        )
+                    }
                 }
             }
         }
     }
-}///
+}

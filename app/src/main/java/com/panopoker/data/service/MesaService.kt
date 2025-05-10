@@ -3,8 +3,11 @@ package com.panopoker.data.service
 import com.panopoker.model.MesaResponse
 import com.panopoker.model.JogadorDaVezResponse
 import com.panopoker.model.CartasComunitariasResponse
+import com.panopoker.model.CartasResponse
 import com.panopoker.model.Jogador
 import com.panopoker.model.Mesa
+import com.panopoker.model.ShowdownResponse
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -47,7 +50,7 @@ interface MesaService {
     suspend fun getMinhasCartas(
         @Path("mesa_id") mesaId: Int,
         @Header("Authorization") token: String
-    ): Response<List<String>>
+    ): Response<CartasResponse>
 
 
     @POST("/mesa/{mesa_id}/call")
@@ -91,6 +94,13 @@ interface MesaService {
     suspend fun listarMesasAbertas(
         @Header("Authorization") token: String
     ): Response<List<Mesa>>
+
+    @GET("/mesa/{mesa_id}/showdown")
+    suspend fun getShowdown(
+        @Path("mesa_id") mesaId: Int,
+        @Header("Authorization") token: String
+    ): Response<ShowdownResponse>
+
 
 
 }
