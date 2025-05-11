@@ -1,5 +1,6 @@
 package com.panopoker.ui.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -8,14 +9,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.panopoker.data.api.AuthApi
-import com.panopoker.data.api.LoginRequest
+import com.panopoker.data.api.AuthResponse
 import com.panopoker.data.network.RetrofitInstance
 import com.panopoker.data.session.SessionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.json.JSONObject
-import retrofit2.HttpException
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 @Composable
 fun LoginScreen(
@@ -60,33 +62,39 @@ fun LoginScreen(
             onClick = {
                 CoroutineScope(Dispatchers.IO).launch {
                     val api = RetrofitInstance.retrofit.create(AuthApi::class.java)
-                    try {
-                        val response = api.login(LoginRequest(username, password))
-                        if (response.isSuccessful && response.body() != null) {
-                            val body = response.body()!!
-                            val token = body.access_token
+                    val body = mapOf("nome" to username, "password" to password)
+                    val call: Call<AuthResponse> = api.loginUnificado(body)
 
-                            sessionManager.saveAuthToken(token)
+                    call.enqueue(object : Callback<AuthResponse> {
+                        override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
+                            if (response.isSuccessful) {
+                                val resp = response.body()!!
+                                sessionManager.saveAuthToken(resp.access_token)
+                                sessionManager.saveUserName(resp.nome)
+                                sessionManager.saveUserId(resp.user_id)
 
-                            val payload = JSONObject(
-                                String(android.util.Base64.decode(token.split(".")[1], android.util.Base64.DEFAULT))
-                            )
-                            val userId = payload.getInt("sub")
-
-                            sessionManager.saveUserId(userId)
-                            sessionManager.saveUserName(username)
-
-                            launch(Dispatchers.Main) {
-                                onLoginSuccess()
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    onLoginSuccess()
+                                }
+                            } else if (response.code() == 401) {
+                                // 🔥 Sessão inválida, limpa tudo
+                                sessionManager.clearSession()
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    Toast.makeText(context, "Sessão inválida. Faça login novamente.", Toast.LENGTH_SHORT).show()
+                                }
+                            } else {
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    Toast.makeText(context, "Erro ao fazer login: ${response.code()}", Toast.LENGTH_SHORT).show()
+                                }
                             }
-                        } else {
-                            // erro ao logar
                         }
-                    } catch (e: HttpException) {
-                        // erro http
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+
+                        override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                Toast.makeText(context, "Erro de conexão", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    })
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -114,20 +122,8 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        GoogleLoginScreen { jwt ->
-            CoroutineScope(Dispatchers.IO).launch {
-                sessionManager.saveAuthToken(jwt)
-
-                val payload = JSONObject(
-                    String(android.util.Base64.decode(jwt.split(".")[1], android.util.Base64.DEFAULT))
-                )
-                val userName = payload.getString("sub")
-                sessionManager.saveUserName(userName)
-
-                launch(Dispatchers.Main) {
-                    onLoginSuccess()
-                }
-            }
+        GoogleLoginScreen {
+            onLoginSuccess()
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.panopoker.ui.splash
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -13,21 +14,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.panopoker.R
+import com.panopoker.data.api.AuthApi
+import com.panopoker.data.network.RetrofitInstance
+import com.panopoker.data.session.SessionManager
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(onSplashFinished: () -> Unit) {
+fun SplashScreen(onSplashFinished: (String) -> Unit) {
     var visible by remember { mutableStateOf(false) }
     val fullText = "joga a bet no pano!"
     var typedText by remember { mutableStateOf("") }
 
     val syncopateFont = FontFamily(Font(R.font.syncopate_bold))
+    val context = LocalContext.current
+    val session = remember { SessionManager(context) }
 
     LaunchedEffect(Unit) {
         visible = true
@@ -38,7 +45,24 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
         }
 
         delay(1300)
-        onSplashFinished()
+
+        val token = session.fetchAuthToken()
+        val userId = session.fetchUserId()
+
+        if (token != null && userId != -1) {
+            try {
+                val api = RetrofitInstance.retrofit.create(AuthApi::class.java)
+                val usuario = api.getUsuario(userId, "Bearer $token")
+                Log.d("SplashScreen", "Usuário válido: ${usuario.nome}")
+                onSplashFinished("lobby")
+            } catch (e: Exception) {
+                Log.e("SplashScreen", "Erro ao validar token", e)
+                session.clearSession()
+                onSplashFinished("login")
+            }
+        } else {
+            onSplashFinished("login")
+        }
     }
 
     Box(
@@ -58,9 +82,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
                     .padding(bottom = 48.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
                         painter = painterResource(id = R.drawable.logo_pano),
                         contentDescription = "Logo PanoPoker",

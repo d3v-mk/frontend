@@ -72,9 +72,12 @@ class SessionManager(context: Context) {
 
     fun clearSession() {
         prefs.edit {
-            clear()
+            remove("access_token")
+            remove("user_id")
+            remove("username")
         }
     }
+
 
     fun getUserIdFromToken(token: String): Int? {
         return try {

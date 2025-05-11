@@ -1,28 +1,40 @@
 package com.panopoker.data.api
 
+import android.content.Context
 import android.util.Log
+import com.panopoker.data.session.SessionManager
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.POST
 
-fun loginWithGoogleToken(idToken: String, onSuccess: (String) -> Unit) {
+fun loginWithGoogleToken(
+    idToken: String,
+    context: Context,
+    onSuccess: () -> Unit
+) {
     val retrofit = Retrofit.Builder()
-        .baseUrl("http://192.168.0.9:8000/") // EMULADOR Android → backend local
+        .baseUrl("http://192.168.0.9:8000/") // ou 10.0.2.2 no emulador
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
     val service = retrofit.create(AuthApi::class.java)
     val body = mapOf("id_token" to idToken)
 
-    service.loginWithGoogle(body).enqueue(object : Callback<AuthResponse> {
+    service.loginUnificado(body).enqueue(object : Callback<AuthResponse> {
         override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
             if (response.isSuccessful) {
-                val token = response.body()?.access_token
-                token?.let { onSuccess(it) }
+                val responseBody = response.body()
+                if (responseBody != null) {
+                    val sessionManager = SessionManager(context)
+                    sessionManager.saveAuthToken(responseBody.access_token)
+                    sessionManager.saveUserName(responseBody.nome)
+                    sessionManager.saveUserId(responseBody.user_id)
+
+                    Log.d("LOGIN_DEBUG", "Login com Google OK: ${responseBody.nome}")
+                    onSuccess()
+                }
             } else {
                 Log.e("GoogleLogin", "Erro no backend: ${response.code()}")
             }
@@ -33,4 +45,3 @@ fun loginWithGoogleToken(idToken: String, onSuccess: (String) -> Unit) {
         }
     })
 }
-

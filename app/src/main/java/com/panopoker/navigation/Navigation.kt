@@ -23,13 +23,11 @@ fun PanoPokerNav() {
     NavHost(navController = navController, startDestination = "splash") { // ⬅️ Começa pela splash
 
         composable("splash") {
-            SplashScreen(
-                onSplashFinished = {
-                    navController.navigate("login") {
-                        popUpTo("splash") { inclusive = true } // remove splash do histórico
-                    }
+            SplashScreen { route ->
+                navController.navigate(route) {
+                    popUpTo("splash") { inclusive = true }
                 }
-            )
+            }
         }
 
         composable("login") {
