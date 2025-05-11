@@ -74,18 +74,16 @@ fun LoginScreen(
                             val userId = payload.getInt("sub")
 
                             sessionManager.saveUserId(userId)
-
-                            // Agora vamos salvar o nome do usuário
                             sessionManager.saveUserName(username)
 
                             launch(Dispatchers.Main) {
                                 onLoginSuccess()
                             }
                         } else {
-                            // erro ao logar (sem Toast)
+                            // erro ao logar
                         }
                     } catch (e: HttpException) {
-                        // erro http (sem Toast)
+                        // erro http
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -96,11 +94,40 @@ fun LoginScreen(
             Text("Entrar")
         }
 
+        Spacer(modifier = Modifier.height(24.dp))
+
         TextButton(
             onClick = onRegisterClick,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Criar conta")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text("ou", fontSize = 14.sp)
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        GoogleLoginScreen { jwt ->
+            CoroutineScope(Dispatchers.IO).launch {
+                sessionManager.saveAuthToken(jwt)
+
+                val payload = JSONObject(
+                    String(android.util.Base64.decode(jwt.split(".")[1], android.util.Base64.DEFAULT))
+                )
+                val userName = payload.getString("sub")
+                sessionManager.saveUserName(userName)
+
+                launch(Dispatchers.Main) {
+                    onLoginSuccess()
+                }
+            }
         }
     }
 }

@@ -40,6 +40,12 @@ android {
 }
 
 dependencies {
+
+    // google oauth
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
     // Compose core
     implementation("androidx.compose.ui:ui:1.5.1")
     implementation("androidx.compose.ui:ui-graphics:1.5.1")
