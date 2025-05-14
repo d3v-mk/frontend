@@ -1,6 +1,6 @@
 package com.panopoker.model
 
-data class MesaResponse(
+data class MesaDto(
     val id: Int,
     val nome: String,
     val buy_in: Double,

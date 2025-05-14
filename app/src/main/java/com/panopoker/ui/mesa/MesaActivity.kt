@@ -27,7 +27,7 @@ class MesaActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        mesaId = intent.getIntExtra("mesaId", -1)
+        mesaId = intent.getIntExtra("mesa_id", -1)
 
         // Botão voltar
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {

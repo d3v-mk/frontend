@@ -18,6 +18,11 @@ class SessionManager(context: Context) {
         private const val KEY_USER_ID = "user_id"
         private const val KEY_USERNAME = "username"
 
+        // ✅ Método estático para usar sem instanciar
+        fun getToken(context: Context): String? {
+            return context.getSharedPreferences("pano_prefs", Context.MODE_PRIVATE)
+                .getString(KEY_TOKEN, null)
+        }
     }
 
     fun saveAuthToken(token: String) {

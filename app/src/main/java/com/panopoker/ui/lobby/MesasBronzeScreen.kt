@@ -1,7 +1,6 @@
 package com.panopoker.ui.lobby
 
 import android.content.Intent
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,7 +9,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -20,14 +18,14 @@ import androidx.navigation.NavController
 import com.panopoker.data.network.RetrofitInstance
 import com.panopoker.data.service.MesaService
 import com.panopoker.data.session.SessionManager
-import com.panopoker.model.Mesa
+import com.panopoker.model.MesaLobbyDto
 import com.panopoker.ui.mesa.MesaActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
 fun MesasBronzeScreen(navController: NavController) {
-    var mesas by remember { mutableStateOf<List<Mesa>>(emptyList()) }
+    var mesas by remember { mutableStateOf<List<MesaLobbyDto>>(emptyList()) }
     var error by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val session = remember { SessionManager(context) }

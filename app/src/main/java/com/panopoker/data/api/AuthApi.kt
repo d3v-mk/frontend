@@ -1,6 +1,6 @@
 package com.panopoker.data.api
 
-import com.panopoker.model.UserInfoResponse
+import com.panopoker.model.UserInfoDto
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.Response
@@ -35,5 +35,5 @@ interface AuthApi {
     suspend fun getUsuario(
         @Path("id") id: Int,
         @Header("Authorization") token: String
-    ): UserInfoResponse
+    ): UserInfoDto
 }

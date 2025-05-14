@@ -15,6 +15,7 @@ import com.panopoker.ui.splash.SplashScreen
 import com.panopoker.ui.lobby.MesasBronzeScreen
 import com.panopoker.ui.lobby.MesasOuroScreen
 import com.panopoker.ui.lobby.MesasPrataScreen
+import com.panopoker.ui.saque.SaqueScreen
 
 @Composable
 fun PanoPokerNav() {
@@ -69,6 +70,10 @@ fun PanoPokerNav() {
 
         composable("deposito") {
             DepositoScreen(navController)
+        }
+
+        composable("saque") {
+            SaqueScreen()
         }
 
         composable("mesa/{mesaId}") { backStackEntry ->

@@ -1,24 +1,37 @@
 package com.panopoker.data.service
 
-import com.panopoker.model.MesaResponse
-import com.panopoker.model.JogadorDaVezResponse
+import com.panopoker.model.JogadorDaVezDto
 import com.panopoker.model.CartasComunitariasResponse
 import com.panopoker.model.CartasResponse
 import com.panopoker.model.Jogador
-import com.panopoker.model.Mesa
-import com.panopoker.model.ShowdownResponse
-import okhttp3.ResponseBody
+import com.panopoker.model.MesaLobbyDto
+import com.panopoker.model.MesaDto
+import com.panopoker.model.ShowdownDto
 import retrofit2.Response
 import retrofit2.http.*
 
 interface MesaService {
 
+    @GET("/matchmaking/bronze")
+    suspend fun buscarMatchBronze(
+        @Header("Authorization") token: String
+    ): Response<MesaDto> // ou o modelo de Mesa que você estiver usando
+
+    @GET("/matchmaking/prata")
+    suspend fun buscarMatchPrata(
+        @Header("Authorization") token: String
+    ): Response<MesaDto> // ou o modelo de Mesa que você estiver usando
+
+    @GET("/matchmaking/ouro")
+    suspend fun buscarMatchOuro(
+        @Header("Authorization") token: String
+    ): Response<MesaDto> // ou o modelo de Mesa que você estiver usando
 
     @GET("/mesa/{mesaId}")
     suspend fun getMesa(
         @Path("mesaId") mesaId: Int,
         @Header("Authorization") token: String
-    ): Response<MesaResponse>
+    ): Response<MesaDto>
 
     @GET("/mesa/{mesa_id}/cartas_comunitarias")
     suspend fun getCartasComunitarias(
@@ -31,7 +44,7 @@ interface MesaService {
     suspend fun getJogadorDaVez(
         @Path("mesa_id") mesaId: Int,
         @Header("Authorization") token: String
-    ): Response<JogadorDaVezResponse>
+    ): Response<JogadorDaVezDto>
 
     @POST("/mesa/{mesa_id}/entrar")
     suspend fun entrarNaMesa(
@@ -93,13 +106,13 @@ interface MesaService {
     @GET("/mesa/abertas")
     suspend fun listarMesasAbertas(
         @Header("Authorization") token: String
-    ): Response<List<Mesa>>
+    ): Response<List<MesaLobbyDto>>
 
     @GET("/mesa/{mesa_id}/showdown")
     suspend fun getShowdown(
         @Path("mesa_id") mesaId: Int,
         @Header("Authorization") token: String
-    ): Response<ShowdownResponse>
+    ): Response<ShowdownDto>
 
 
 

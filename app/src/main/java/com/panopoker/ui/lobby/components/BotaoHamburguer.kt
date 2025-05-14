@@ -42,6 +42,7 @@ fun MenuLateralCompleto(
     drawerState: DrawerState,
     scope: CoroutineScope,
     nomeUsuario: String,
+    idPublico: String?,
     navController: NavController,
     conteudo: @Composable () -> Unit
 ) {
@@ -78,6 +79,12 @@ fun MenuLateralCompleto(
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFFFFD700)
                     )
+
+                    Text(
+                        text = "ID: ${idPublico ?: "Carregando..."}",
+                        fontSize = 14.sp,
+                        color = Color.LightGray
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -90,6 +97,13 @@ fun MenuLateralCompleto(
                         navController.navigate("deposito")
                     }
                 }
+
+                DrawerItem("Saque") {
+                    scope.launch {
+                        drawerState.close()
+                        navController.navigate("saque")
+                    }
+                }
                 DrawerItem("Configurações") { /* implementar depois */ }
                 DrawerItem("Sair") { /* implementar depois */ }
             }
@@ -97,6 +111,7 @@ fun MenuLateralCompleto(
         content = { conteudo() }
     )
 }
+
 
 @Composable
 fun DrawerItem(text: String, onClick: () -> Unit) {

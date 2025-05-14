@@ -2,6 +2,9 @@ package com.panopoker.data.network
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.panopoker.data.service.MesaService
+import com.panopoker.data.service.PromotorService
+import com.panopoker.data.service.UsuarioService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -15,8 +18,15 @@ object RetrofitInstance {
     }
 
     private val client = OkHttpClient.Builder()
+        .addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .addHeader("Accept", "application/json")
+                .build()
+            chain.proceed(request)
+        }
         .addInterceptor(loggingInterceptor)
         .build()
+
 
     private val gson: Gson = GsonBuilder()
         .setLenient()
@@ -29,5 +39,18 @@ object RetrofitInstance {
             .client(client)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
+    }
+
+    // ✅ ADICIONA ISSO AQUI EMBAIXO
+    val promotorService: PromotorService by lazy {
+        retrofit.create(PromotorService::class.java)
+    }
+
+    val usuarioService: UsuarioService by lazy {
+        retrofit.create(UsuarioService::class.java)
+    }
+
+    val mesaService: MesaService by lazy {
+        retrofit.create(MesaService::class.java)
     }
 }

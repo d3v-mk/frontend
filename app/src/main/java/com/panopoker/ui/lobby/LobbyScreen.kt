@@ -30,7 +30,11 @@ fun LobbyScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val session = remember { SessionManager(context) }
-    val nomeUsuario = session.fetchUserName() ?: "Jogador"
+    val token = SessionManager.getToken(context)
+    var nomeUsuario by remember { mutableStateOf("Jogador") }
+    var idPublico by remember { mutableStateOf("") }
+
+
 
     // Use remember para manter o estado mutável do saldo do usuário
     var saldoUsuario by remember { mutableStateOf(0.0f) }
@@ -40,10 +44,25 @@ fun LobbyScreen(navController: NavController) {
         saldoUsuario = session.fetchUserBalance() // Atualiza o saldo com a função suspend
     }
 
+    LaunchedEffect(Unit) {
+        if (!token.isNullOrBlank()) {
+            try {
+                val usuario = com.panopoker.data.network.RetrofitInstance.usuarioService.getUsuarioLogado("Bearer $token")
+                nomeUsuario = usuario.nome
+                idPublico = usuario.id_publico // ← pega o ID público
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+
+
     MenuLateralCompleto(
         drawerState = drawerState,
         scope = scope,
         nomeUsuario = nomeUsuario,
+        idPublico = idPublico,
         navController = navController
     ) {
         Column(

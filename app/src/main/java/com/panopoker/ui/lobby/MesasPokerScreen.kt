@@ -1,14 +1,11 @@
 package com.panopoker.ui.lobby
 
 import android.content.Intent
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,34 +18,41 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.panopoker.data.network.RetrofitInstance
-import com.panopoker.data.service.MesaService
 import com.panopoker.data.session.SessionManager
-import com.panopoker.model.Mesa
 import com.panopoker.ui.components.BotaoHamburguer
 import com.panopoker.ui.components.MenuLateralCompleto
-import com.panopoker.ui.mesa.MesaActivity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import com.panopoker.R
 import androidx.compose.ui.text.font.FontWeight
-
-
+import kotlinx.coroutines.launch
 
 @Composable
 fun MesasPokerScreen(navController: NavController) {
     val context = LocalContext.current
-    val session = remember { SessionManager(context) }
-    val nomeUsuario = session.fetchUserName() ?: "Jogador"
+    val token = SessionManager.getToken(context)
+    var nomeUsuario by remember { mutableStateOf("Jogador") }
+    var idPublico by remember { mutableStateOf("") }
+    var erroMatch by remember { mutableStateOf<String?>(null) }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        if (!token.isNullOrBlank()) {
+            try {
+                val usuario = com.panopoker.data.network.RetrofitInstance.usuarioService.getUsuarioLogado("Bearer $token")
+                nomeUsuario = usuario.nome
+                idPublico = usuario.id_publico
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     MenuLateralCompleto(
         drawerState = drawerState,
         scope = scope,
         nomeUsuario = nomeUsuario,
+        idPublico = idPublico,
         navController = navController
     ) {
         Column(
@@ -71,7 +75,6 @@ fun MesasPokerScreen(navController: NavController) {
                 BotaoHamburguer(drawerState, scope)
             }
 
-            // Cards de seleção de categoria com imagem
             listOf("bronze", "prata", "ouro").forEach { tipo ->
                 val titulo = when (tipo) {
                     "bronze" -> "Mesas Bronze"
@@ -85,11 +88,42 @@ fun MesasPokerScreen(navController: NavController) {
                     else -> R.drawable.mesasouro_card
                 }
 
+                val matchFunction = when (tipo) {
+                    "bronze" -> com.panopoker.data.network.RetrofitInstance.mesaService::buscarMatchBronze
+                    "prata" -> com.panopoker.data.network.RetrofitInstance.mesaService::buscarMatchPrata
+                    else -> com.panopoker.data.network.RetrofitInstance.mesaService::buscarMatchOuro
+                }
+
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
-                        .clickable { navController.navigate("mesas_$tipo") },
+                        .clickable {
+                            scope.launch {
+                                try {
+                                    val response = matchFunction("Bearer $token")
+                                    if (response.isSuccessful) {
+                                        val mesaId = response.body()?.id
+                                        if (mesaId != null) {
+                                            val entrar = com.panopoker.data.network.RetrofitInstance.mesaService.entrarNaMesa(mesaId, "Bearer $token")
+                                            if (entrar.isSuccessful) {
+                                                val intent = Intent(context, com.panopoker.ui.mesa.MesaActivity::class.java)
+                                                intent.putExtra("mesa_id", mesaId)
+                                                context.startActivity(intent)
+                                            } else {
+                                                erroMatch = "Erro ao entrar na mesa."
+                                            }
+                                        } else {
+                                            erroMatch = "Nenhuma mesa disponível."
+                                        }
+                                    } else {
+                                        erroMatch = "Nenhuma mesa disponível."
+                                    }
+                                } catch (e: Exception) {
+                                    erroMatch = "Erro ao buscar mesa."
+                                }
+                            }
+                        },
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
                     border = BorderStroke(2.dp, Color(0xFFFFC300))
@@ -103,27 +137,30 @@ fun MesasPokerScreen(navController: NavController) {
                         Image(
                             painter = painterResource(id = imagemResId),
                             contentDescription = titulo,
-                            modifier = Modifier
-                                .fillMaxSize(),
+                            modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
 
-                        // Texto sobre a imagem
                         Text(
                             text = titulo,
                             fontSize = 20.sp,
                             color = Color(0xFFFFC300),
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                         )
                     }
                 }
             }
 
+            if (erroMatch != null) {
+                Text(
+                    text = erroMatch!!,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
 
-
-            // Card: Torneios (em breve)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -144,6 +181,3 @@ fun MesasPokerScreen(navController: NavController) {
         }
     }
 }
-
-
-

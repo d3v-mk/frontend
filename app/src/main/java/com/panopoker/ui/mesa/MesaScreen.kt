@@ -12,9 +12,8 @@ import com.panopoker.data.network.RetrofitInstance
 import com.panopoker.data.service.MesaService
 import com.panopoker.data.session.SessionManager
 import com.panopoker.model.CartasComunitarias
-import com.panopoker.model.ShowdownResponse
+import com.panopoker.model.ShowdownDto
 import com.panopoker.model.Jogador
-import com.panopoker.model.MesaResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -23,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.panopoker.model.MesaDto
 
 // Componentes
 import com.panopoker.ui.mesa.components.BotaoSair
@@ -48,8 +48,8 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     var stackJogador by remember { mutableFloatStateOf(1f) }
     var raiseValue by remember { mutableFloatStateOf(0f) }
     var mostrarSlider by remember { mutableStateOf(false) }
-    var showdownInfo by remember { mutableStateOf<ShowdownResponse?>(null) }
-    var mesa by remember { mutableStateOf<MesaResponse?>(null) }
+    var showdownInfo by remember { mutableStateOf<ShowdownDto?>(null) }
+    var mesa by remember { mutableStateOf<MesaDto?>(null) }
     val usuarioLogadoId = session.fetchUserId()
 
     LaunchedEffect(mostrarSlider) {

@@ -138,7 +138,6 @@ fun ControlesDeAcao(
                         try {
                             RetrofitInstance.retrofit.create(MesaService::class.java)
                                 .foldJWT(mesaId, "Bearer $accessToken")
-                            tocarSom(R.raw.fold) // som de f old ao apertar o botao
                             delay(500)
                             onRefresh()
                         } catch (_: Exception) {}
@@ -156,10 +155,8 @@ fun ControlesDeAcao(
                         try {
                             val service = RetrofitInstance.retrofit.create(MesaService::class.java)
                             if (textoAcao == "Call") {
-                                //tocarSom(R.raw.call) // som para CALL
                                 service.callJWT(mesaId, "Bearer $accessToken")
                             } else {
-                                tocarSom(R.raw.check) // som para CHECK
                                 service.checkJWT(mesaId, "Bearer $accessToken")
                             }
                             delay(500)

@@ -1,5 +1,7 @@
 package com.panopoker.ui.financas
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,123 +10,118 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.panopoker.model.PromotorDto
+import com.panopoker.data.network.RetrofitInstance
+import com.panopoker.data.session.SessionManager
+import kotlinx.coroutines.launch
 
 @Composable
 fun DepositoScreen(navController: NavController) {
-    var valorDeposito by remember { mutableStateOf("") }
-    var codigoPix by remember { mutableStateOf<String?>(null) }
-    var erroDeposito by remember { mutableStateOf<String?>(null) } // ⬅️ NOVO
-    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var promotores by remember { mutableStateOf<List<PromotorDto>>(emptyList()) }
+    var loading by remember { mutableStateOf(true) }
+    var jogadorId by remember { mutableStateOf<Int?>(null) }
+    val token = SessionManager.getToken(context)
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            if (!token.isNullOrBlank()) {
+                try {
+                    val user = RetrofitInstance.usuarioService.getUsuarioLogado("Bearer $token")
+                    jogadorId = user.id
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            try {
+                promotores = RetrofitInstance.promotorService.getPromotores()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                loading = false
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF121212))
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(24.dp)
     ) {
         Text(
-            text = "Depósito via Pix",
+            text = "Escolha um Promotor",
             fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFFFD700)
+            color = Color(0xFFFFD700),
+            modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        if (loading) {
+            CircularProgressIndicator(color = Color(0xFFFFD700))
+        } else {
+            promotores.forEach { promotor ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1F1F1F))
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = promotor.nome,
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            modifier = Modifier.weight(1f)
+                        )
 
-        OutlinedTextField(
-            value = valorDeposito,
-            onValueChange = {
-                valorDeposito = it
-                erroDeposito = null // limpa o erro ao digitar
-            },
-            label = { Text("Valor do depósito (min: 3.00)") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(0.9f),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFFFD700),
-                unfocusedBorderColor = Color.Gray,
-                cursorColor = Color.White,
-                focusedLabelColor = Color(0xFFFFD700)
-            )
-        )
+                        // Botão da Loja
+                        Button(
+                            onClick = {
+                                val url = "http://192.168.0.9:8000/loja/promotor/${promotor.slug}"
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                context.startActivity(intent)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text("Loja", color = Color.Black)
+                        }
 
-        // Exibe a mensagem de erro, se houver
-        erroDeposito?.let {
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = it,
-                color = Color.Red,
-                fontSize = 13.sp,
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .padding(start = 16.dp)
-            )
-        }
+                        // Botão WhatsApp
+                        promotor.whatsapp?.takeIf { it.isNotBlank() }?.let { numero ->
+                            val numeroLimpo = numero.replace(Regex("[^\\d]"), "")
+                            val mensagem = Uri.encode("Olá! Sou jogador do Pano *ID ${jogadorId ?: "?"}*\nSolicito atendimento por favor.")
+                            val url = "https://wa.me/$numeroLimpo?text=$mensagem"
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Button(
-            onClick = {
-                val valor = valorDeposito.toFloatOrNull()
-                if (valor != null && valor >= 3.0f) {
-                    erroDeposito = null
-                    codigoPix = "0AJIDSJAISDJCODIGOPIXXXXX"
-                } else {
-                    codigoPix = null
-                    erroDeposito = "Insira um valor válido acima de R$ 3.00"
+                            Button(
+                                onClick = {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                    context.startActivity(intent)
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("WhatsApp", color = Color.White)
+                            }
+                        }
+                    }
                 }
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)),
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier.fillMaxWidth(0.9f)
-        ) {
-            Text("Gerar Pix", color = Color.Black, fontSize = 18.sp)
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        codigoPix?.let { codigo ->
-            Text(
-                text = "Código Pix:",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = codigo,
-                color = Color.LightGray,
-                modifier = Modifier
-                    .background(Color(0xFF1F1F1F), shape = RoundedCornerShape(8.dp))
-                    .padding(12.dp)
-                    .fillMaxWidth(0.95f)
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                onClick = {
-                    clipboardManager.setText(AnnotatedString(codigo))
-                    erroDeposito = null
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF333333)),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text("Copiar código", color = Color.White)
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         TextButton(onClick = { navController.popBackStack() }) {
             Text("Voltar", color = Color.White)
