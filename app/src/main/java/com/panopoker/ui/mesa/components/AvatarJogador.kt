@@ -1,27 +1,30 @@
 package com.panopoker.ui.mesa.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.panopoker.R
 import com.panopoker.model.Jogador
-import androidx.compose.ui.zIndex
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.runtime.*
 import kotlinx.coroutines.delay
-
-
-
 
 @Composable
 fun AvatarJogador(jogador: Jogador) {
@@ -39,30 +42,32 @@ fun AvatarJogador(jogador: Jogador) {
         }
     }
 
+    val finalAvatarUrl = jogador.avatarUrl ?: "https://i.imgur.com/q0fxp3t.jpeg" // fallback lendário
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier.zIndex(1f)
     ) {
-        Card(
-            shape = RoundedCornerShape(50),
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(finalAvatarUrl)
+                .crossfade(true)
+                .build(),
+            contentDescription = "Avatar jogador",
+            contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(64.dp)
+                .shadow(6.dp, CircleShape)
+                .clip(CircleShape)
                 .border(
                     3.dp,
                     if (jogador.vez) Color.Yellow else Color.Gray,
-                    RoundedCornerShape(50)
-                ),
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.avatar_default),
-                contentDescription = "Avatar",
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+                    CircleShape
+                )
+        )
 
-        if (jogador.vez) { //exibe o tempo restante na tela (15s)
+        if (jogador.vez) { // exibe o tempo restante na tela (20s)
             Text(
                 text = "Tempo: ${tempoRestante}s",
                 color = Color.Yellow,
@@ -70,8 +75,6 @@ fun AvatarJogador(jogador: Jogador) {
                 fontWeight = FontWeight.Bold
             )
         }
-
-
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -95,7 +98,7 @@ fun AvatarJogador(jogador: Jogador) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Image(
+                    androidx.compose.foundation.Image(
                         painter = painterResource(id = R.drawable.ficha_poker),
                         contentDescription = null,
                         modifier = Modifier.size(14.dp)

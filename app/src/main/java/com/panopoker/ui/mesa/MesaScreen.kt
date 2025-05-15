@@ -81,7 +81,7 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                 val respJogadores = withContext(Dispatchers.IO) {
                     service.getJogadoresDaMesa(mesaId, "Bearer $accessToken")
                 }
-                jogadores = respJogadores.body() ?: emptyList()
+                jogadores = (respJogadores.body() ?: emptyList()).map { it.copy() }
 
                 // Busca minhas cartas
                 val respMinhas = withContext(Dispatchers.IO) {

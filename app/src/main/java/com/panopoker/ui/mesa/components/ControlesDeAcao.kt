@@ -68,32 +68,38 @@ fun ControlesDeAcao(
             contentAlignment = Alignment.BottomEnd
         ) {
             Column(
-                modifier = Modifier.padding(end = 8.dp, bottom = 8.dp),
+                modifier = Modifier
+                    .padding(end = 16.dp, bottom = 16.dp)
+                    .width(280.dp),
                 horizontalAlignment = Alignment.End
             ) {
-                Text("Raise: R$ %.2f".format(raiseValue), color = Color.White)
+                Text(
+                    text = "Raise: R$ %.2f".format(raiseValue),
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
                 Slider(
                     value = raiseValue,
                     onValueChange = onSliderChange,
                     valueRange = 0.01f..sliderMax,
                     steps = 50,
-                    modifier = Modifier
-                        .offset(x = 65.dp)
-                        .height(290.dp)
-                        .width(240.dp)
-                        .graphicsLayer { rotationZ = -90f },
+                    modifier = Modifier.width(240.dp),
                     colors = SliderDefaults.colors(
                         thumbColor = Color(0xFFFFC107),
                         activeTrackColor = Color(0xFFFFC107),
                         inactiveTrackColor = Color.DarkGray
                     )
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
                         onClick = onEsconderSlider,
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                        modifier = Modifier.width(110.dp).height(36.dp)
+                        modifier = Modifier.height(36.dp).width(110.dp)
                     ) {
                         Text("Cancelar", color = Color.White, fontSize = 12.sp)
                     }
@@ -104,29 +110,35 @@ fun ControlesDeAcao(
                                 try {
                                     val service = RetrofitInstance.retrofit.create(MesaService::class.java)
 
-                                    if (raiseValue >= sliderMax) {
-                                        // 💥 ALL-IN!
+                                    val response = if (raiseValue >= sliderMax) {
                                         service.allInJWT(mesaId, "Bearer $accessToken")
                                     } else {
-                                        // 🎯 RAISE normal
                                         service.raiseJWT(mesaId, raiseLimpo, "Bearer $accessToken")
                                     }
 
-                                    onEsconderSlider()
-                                    delay(500)
-                                    onRefresh()
+                                    // Só esconde o slider e dá refresh DEPOIS que a resposta voltar:
+                                    if (response.isSuccessful) {
+                                        onEsconderSlider()
+                                        delay(100) // só um respiro, nem precisa ser 500
+                                        onRefresh()
+                                    }
+
                                 } catch (_: Exception) {}
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0066CC)),
-                        modifier = Modifier.width(110.dp).height(36.dp)
+                        modifier = Modifier.height(36.dp).width(110.dp)
                     ) {
                         Text("Confirmar", color = Color.White, fontSize = 12.sp)
                     }
                 }
             }
         }
-    } else {
+    }
+
+
+
+    else {
         Row(
             modifier = Modifier.padding(end = 16.dp, bottom = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),

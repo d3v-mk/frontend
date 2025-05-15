@@ -32,6 +32,8 @@ fun MesasPokerScreen(navController: NavController) {
     var nomeUsuario by remember { mutableStateOf("Jogador") }
     var idPublico by remember { mutableStateOf("") }
     var erroMatch by remember { mutableStateOf<String?>(null) }
+    var avatarUrl by remember { mutableStateOf<String?>(null) }
+
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -39,20 +41,27 @@ fun MesasPokerScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         if (!token.isNullOrBlank()) {
             try {
-                val usuario = com.panopoker.data.network.RetrofitInstance.usuarioService.getUsuarioLogado("Bearer $token")
-                nomeUsuario = usuario.nome
-                idPublico = usuario.id_publico
+                val response = com.panopoker.data.network.RetrofitInstance.usuarioApi.getPerfil("Bearer $token")
+                if (response.isSuccessful) {
+                    response.body()?.let { perfil ->
+                        nomeUsuario = perfil.nome
+                        idPublico = perfil.id_publico
+                        avatarUrl = perfil.avatarUrl
+                    }
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
+
     MenuLateralCompleto(
         drawerState = drawerState,
         scope = scope,
         nomeUsuario = nomeUsuario,
         idPublico = idPublico,
+        avatarUrl = avatarUrl,
         navController = navController
     ) {
         Column(

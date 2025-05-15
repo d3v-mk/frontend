@@ -18,10 +18,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.panopoker.R
+import com.panopoker.data.network.RetrofitInstance
+import com.panopoker.data.session.SessionManager
 import com.panopoker.ui.components.BotaoHamburguer
 import com.panopoker.ui.components.MenuLateralCompleto
-import com.panopoker.data.session.SessionManager
 import kotlinx.coroutines.launch
 
 @Composable
@@ -33,36 +35,34 @@ fun LobbyScreen(navController: NavController) {
     val token = SessionManager.getToken(context)
     var nomeUsuario by remember { mutableStateOf("Jogador") }
     var idPublico by remember { mutableStateOf("") }
-
-
-
-    // Use remember para manter o estado mutável do saldo do usuário
+    var avatarUrl by remember { mutableStateOf<String?>(null) }
     var saldoUsuario by remember { mutableStateOf(0.0f) }
 
-    // Lançar a chamada assíncrona para pegar o saldo quando o Composable for exibido
     LaunchedEffect(Unit) {
-        saldoUsuario = session.fetchUserBalance() // Atualiza o saldo com a função suspend
-    }
+        saldoUsuario = session.fetchUserBalance()
 
-    LaunchedEffect(Unit) {
         if (!token.isNullOrBlank()) {
             try {
-                val usuario = com.panopoker.data.network.RetrofitInstance.usuarioService.getUsuarioLogado("Bearer $token")
-                nomeUsuario = usuario.nome
-                idPublico = usuario.id_publico // ← pega o ID público
+                val response = RetrofitInstance.usuarioApi.getPerfil("Bearer $token")
+                if (response.isSuccessful) {
+                    response.body()?.let { perfil ->
+                        nomeUsuario = perfil.nome
+                        idPublico = perfil.id_publico
+                        avatarUrl = perfil.avatarUrl
+                    }
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
-
-
     MenuLateralCompleto(
         drawerState = drawerState,
         scope = scope,
         nomeUsuario = nomeUsuario,
         idPublico = idPublico,
+        avatarUrl = avatarUrl,
         navController = navController
     ) {
         Column(
@@ -76,15 +76,14 @@ fun LobbyScreen(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Exibindo a imagem de ficha ao lado do saldo
                 Image(
-                    painter = painterResource(id = R.drawable.ficha_poker), // Substitua pelo nome correto da sua imagem de ficha
+                    painter = painterResource(id = R.drawable.ficha_poker),
                     contentDescription = "Ficha PanoPoker",
-                    modifier = Modifier.size(30.dp), // Ajuste o tamanho da imagem conforme necessário
+                    modifier = Modifier.size(30.dp),
                     contentScale = ContentScale.Crop
                 )
 
-                Spacer(modifier = Modifier.width(8.dp)) // Espaçamento entre a imagem e o texto
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
                     text = "PanoFichas: ${"%.2f".format(saldoUsuario)}",
@@ -107,14 +106,13 @@ fun LobbyScreen(navController: NavController) {
                     },
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
-                border = BorderStroke(2.dp, Color(0xFFFFC300)) //amarelo alaranjado
+                border = BorderStroke(2.dp, Color(0xFFFFC300))
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp)
                 ) {
-                    // Imagem de fundo
                     Image(
                         painter = painterResource(id = R.drawable.poker_card),
                         contentDescription = "Imagem Poker",
@@ -124,8 +122,7 @@ fun LobbyScreen(navController: NavController) {
                 }
             }
 
-
-            // Card: Blackjack (em breve)
+            // Blackjack
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -139,15 +136,12 @@ fun LobbyScreen(navController: NavController) {
                         .fillMaxWidth()
                         .height(100.dp)
                 ) {
-                    // Imagem de fundo
                     Image(
                         painter = painterResource(id = R.drawable.blackjack_card),
                         contentDescription = "Imagem Blackjack",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.matchParentSize()
                     )
-
-                    // Texto sobre a imagem
                     Text(
                         text = "(EM BREVE)",
                         fontSize = 20.sp,
@@ -158,8 +152,7 @@ fun LobbyScreen(navController: NavController) {
                 }
             }
 
-
-            // Card: Slots (em breve)
+            // Slots
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -173,15 +166,12 @@ fun LobbyScreen(navController: NavController) {
                         .fillMaxWidth()
                         .height(100.dp)
                 ) {
-                    // Imagem de fundo
                     Image(
                         painter = painterResource(id = R.drawable.slots_card),
                         contentDescription = "Imagem Slots",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.matchParentSize()
                     )
-
-                    // Texto sobre a imagem
                     Text(
                         text = "(EM BREVE)",
                         fontSize = 20.sp,
@@ -192,8 +182,7 @@ fun LobbyScreen(navController: NavController) {
                 }
             }
 
-
-            // Card: Banner
+            // Banner
             Card(
                 modifier = Modifier
                     .fillMaxWidth()

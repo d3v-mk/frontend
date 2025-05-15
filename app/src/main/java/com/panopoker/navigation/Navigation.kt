@@ -16,6 +16,8 @@ import com.panopoker.ui.lobby.MesasBronzeScreen
 import com.panopoker.ui.lobby.MesasOuroScreen
 import com.panopoker.ui.lobby.MesasPrataScreen
 import com.panopoker.ui.saque.SaqueScreen
+import com.panopoker.ui.perfil.PerfilScreen
+
 
 @Composable
 fun PanoPokerNav() {
@@ -46,6 +48,10 @@ fun PanoPokerNav() {
             RegisterScreen(onRegisterSuccess = {
                 navController.navigate("login")
             })
+        }
+
+        composable("perfil") {
+            PerfilScreen(navController = navController)
         }
 
         composable("lobby") {

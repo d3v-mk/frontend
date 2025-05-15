@@ -25,6 +25,16 @@ class SessionManager(context: Context) {
         }
     }
 
+    fun saveAvatarUrl(url: String) {
+        prefs.edit {
+            putString("avatar_url", url)
+        }
+    }
+
+    fun getAvatarUrl(): String? {
+        return prefs.getString("avatar_url", null)
+    }
+
     fun saveAuthToken(token: String) {
         prefs.edit {
             putString(KEY_TOKEN, token)

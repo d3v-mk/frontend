@@ -26,6 +26,7 @@
         android:theme="@style/Theme.Panopoker"
         tools:targetApi="31">
 
+
         <!-- Config Google OAuth -->
         <meta-data
             android:name="com.google.android.gms.auth.api.signin.DEFAULT_WEB_CLIENT_ID"

@@ -53,4 +53,8 @@ object RetrofitInstance {
     val mesaService: MesaService by lazy {
         retrofit.create(MesaService::class.java)
     }
+
+    val usuarioApi: UsuarioService by lazy {
+        retrofit.create(UsuarioService::class.java)
+    }
 }

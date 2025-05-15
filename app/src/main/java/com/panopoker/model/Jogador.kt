@@ -16,6 +16,7 @@ data class Jogador(
     val posicao_cadeira: Int = 0,
     val participando_da_rodada: Boolean,
     val is_sb: Boolean,
+    val avatarUrl: String?,
     val is_bb: Boolean,
     )
 

@@ -21,6 +21,8 @@ import androidx.navigation.NavController
 import com.panopoker.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import coil.compose.rememberAsyncImagePainter
+
 
 @Composable
 fun BotaoHamburguer(drawerState: DrawerState, scope: CoroutineScope) {
@@ -43,6 +45,7 @@ fun MenuLateralCompleto(
     scope: CoroutineScope,
     nomeUsuario: String,
     idPublico: String?,
+    avatarUrl: String?,
     navController: NavController,
     conteudo: @Composable () -> Unit
 ) {
@@ -64,8 +67,14 @@ fun MenuLateralCompleto(
                         color = Color.Gray,
                         modifier = Modifier.size(100.dp)
                     ) {
+                        val avatarPainter = if (!avatarUrl.isNullOrBlank()) {
+                            rememberAsyncImagePainter(avatarUrl + "?nocache=${System.currentTimeMillis()}")
+                        } else {
+                            painterResource(id = R.drawable.avatar_default)
+                        }
+
                         Image(
-                            painter = painterResource(id = R.drawable.avatar_default),
+                            painter = avatarPainter,
                             contentDescription = "Avatar do jogador",
                             modifier = Modifier.fillMaxSize()
                         )
@@ -90,7 +99,13 @@ fun MenuLateralCompleto(
                 Spacer(modifier = Modifier.height(16.dp))
                 Divider()
 
-                DrawerItem("Perfil") { /* implementar depois */ }
+                DrawerItem("Perfil") {
+                    scope.launch {
+                        drawerState.close()
+                        navController.navigate("perfil")
+                    }
+                }
+
                 DrawerItem("Depositar") {
                     scope.launch {
                         drawerState.close()
