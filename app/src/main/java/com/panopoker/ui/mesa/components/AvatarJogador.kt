@@ -1,12 +1,10 @@
 package com.panopoker.ui.mesa.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,11 +26,10 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun AvatarJogador(jogador: Jogador) {
+    val tempoTotal = 20
+    var tempoRestante by remember { mutableStateOf(tempoTotal) }
 
-    val tempoTotal = 20 // timer
-    var tempoRestante by remember { mutableStateOf(tempoTotal) } // timer
-
-    LaunchedEffect(jogador.vez) { // timer
+    LaunchedEffect(jogador.vez) {
         if (jogador.vez) {
             tempoRestante = tempoTotal
             while (tempoRestante > 0) {
@@ -42,37 +39,31 @@ fun AvatarJogador(jogador: Jogador) {
         }
     }
 
-    val finalAvatarUrl = jogador.avatarUrl ?: "https://i.imgur.com/q0fxp3t.jpeg" // fallback lendário
+    val progresso = tempoRestante / tempoTotal.toFloat()
+    val finalAvatarUrl = jogador.avatarUrl ?: "https://i.imgur.com/q0fxp3t.jpeg"
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier.zIndex(1f)
     ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(finalAvatarUrl)
-                .crossfade(true)
-                .build(),
-            contentDescription = "Avatar jogador",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(64.dp)
-                .shadow(6.dp, CircleShape)
-                .clip(CircleShape)
-                .border(
-                    3.dp,
-                    if (jogador.vez) Color.Yellow else Color.Gray,
-                    CircleShape
-                )
-        )
+        Box(modifier = Modifier.size(72.dp)) {
+            if (jogador.vez) {
+                TimerCircular(progresso = progresso)
+            }
 
-        if (jogador.vez) { // exibe o tempo restante na tela (20s)
-            Text(
-                text = "Tempo: ${tempoRestante}s",
-                color = Color.Yellow,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(finalAvatarUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Avatar jogador",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(64.dp)
+                    .align(Alignment.Center)
+                    .clip(CircleShape)
+                    .shadow(6.dp, CircleShape)
             )
         }
 
@@ -80,7 +71,6 @@ fun AvatarJogador(jogador: Jogador) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // Nome
             Text(
                 jogador.username,
                 color = Color.White,
@@ -88,7 +78,6 @@ fun AvatarJogador(jogador: Jogador) {
                 fontWeight = FontWeight.Bold
             )
 
-            // Saldo + SB/BB
             Box(
                 modifier = Modifier
                     .background(Color(0xFF555555), RoundedCornerShape(6.dp))
@@ -108,25 +97,14 @@ fun AvatarJogador(jogador: Jogador) {
                         color = Color(0xFFFFD700),
                         fontSize = 12.sp
                     )
-
                     if (jogador.is_sb) {
-                        Text(
-                            "SB",
-                            color = Color.Cyan,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text("SB", color = Color.Cyan, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                     if (jogador.is_bb) {
-                        Text(
-                            "BB",
-                            color = Color.Magenta,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text("BB", color = Color.Magenta, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
     }
-}
+}///

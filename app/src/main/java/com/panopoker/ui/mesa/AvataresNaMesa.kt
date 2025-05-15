@@ -105,7 +105,7 @@ fun AvataresNaMesa(
                         .align(Alignment.Center)
                 ) {
                     AvatarJogador(jogador)
-                    // <3333
+
                     // fichas de aposta
                     if (
                         jogador.aposta_atual > 0f &&
