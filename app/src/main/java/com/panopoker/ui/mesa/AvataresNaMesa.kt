@@ -43,10 +43,10 @@ fun AvataresNaMesa(
         val context = LocalContext.current
 
         val avatarPositions = listOf(
-            0.5f to 0.82f,
+            0.5f to 0.82f, //ok
             0.12f to 0.62f,
             0.18f to 0.26f,
-            0.5f to 0.08f,
+            0.5f to 0.15f, //ok
             0.82f to 0.26f,
             0.88f to 0.62f
         )
@@ -69,7 +69,7 @@ fun AvataresNaMesa(
             0.5f to 0.5f
         )
 
-        val tamanhoCarta = largura * 0.05f
+        val tamanhoCarta = largura * 0.037f
 
         if ((mostrarFlop || mostrarTurn || mostrarRiver || mostrarShowdown) && poteTotal > 0f) {
             Box(
@@ -122,7 +122,7 @@ fun AvataresNaMesa(
                         val espacamento = tamanhoCarta * -0.3f
                         val larguraCartas = tamanhoCarta * 2 + espacamento
 
-                        val deveRevelar = mostrarShowdown && jogador.cartas.size == 2
+                        val deveRevelar = mostrarShowdown && jogador.cartas.size == 2 && jogador.participando_da_rodada == true
                         val cartas = if (deveRevelar) jogador.cartas else listOf("placeholder1", "placeholder2")
 
                         Row(
@@ -159,4 +159,4 @@ fun AvataresNaMesa(
             context = context
         )
     }
-}
+}///

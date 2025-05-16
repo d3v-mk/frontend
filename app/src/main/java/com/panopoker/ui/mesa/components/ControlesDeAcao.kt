@@ -76,9 +76,13 @@ fun ControlesDeAcao(
                 Text(
                     text = "Raise: R$ %.2f".format(raiseValue),
                     color = Color.White,
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(bottom = 4.dp)
+                    fontSize = 16.sp,
+                    modifier = Modifier
+                        .padding(bottom = 4.dp)
+                        .fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
+
 
                 Slider(
                     value = raiseValue,
@@ -144,6 +148,34 @@ fun ControlesDeAcao(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.Bottom
         ) {
+            // Botão REVELAR (só aparece se o jogador foldou e está no showdown)
+            if (jogadorAtual?.participando_da_rodada == false) {
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            try {
+                                val service = RetrofitInstance.retrofit.create(MesaService::class.java)
+                                val resp = service.revelarCartas(mesaId, "Bearer $accessToken")
+                                if (resp.isSuccessful) {
+                                    delay(200)
+                                    onRefresh()
+                                }
+                            } catch (_: Exception) {}
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFDAA520),
+                        contentColor = Color.Black
+                    ),
+                    modifier = Modifier
+                        .height(36.dp)
+                        .width(65.dp)
+                ) {
+                    Text("👁", fontSize = 12.sp)
+                }
+            }
+
+            // Botão FOLD
             Button(
                 onClick = {
                     coroutineScope.launch {
@@ -161,6 +193,7 @@ fun ControlesDeAcao(
                 Text("Fold", color = Color.White, fontSize = 12.sp)
             }
 
+            // Botão CALL / CHECK
             Button(
                 onClick = {
                     coroutineScope.launch {
@@ -182,6 +215,7 @@ fun ControlesDeAcao(
                 Text(textoAcao, color = Color.White, fontSize = 12.sp)
             }
 
+            // Botão RAISE
             Button(
                 onClick = {
                     val saldo = jogadorAtual?.saldo_atual ?: 0.01f
@@ -195,4 +229,4 @@ fun ControlesDeAcao(
             }
         }
     }
-}
+}////

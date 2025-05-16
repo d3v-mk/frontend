@@ -12,6 +12,12 @@ import retrofit2.http.*
 
 interface MesaService {
 
+    @POST("/mesa/{mesaId}/revelar_cartas")
+    suspend fun revelarCartas(
+        @Path("mesaId") mesaId: Int,
+        @Header("Authorization") token: String
+    ): Response<Unit>
+
     @GET("/matchmaking/bronze")
     suspend fun buscarMatchBronze(
         @Header("Authorization") token: String

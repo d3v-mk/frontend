@@ -52,17 +52,17 @@ fun CartasDoJogador(minhasCartas: List<String>, context: Context) {
                             .graphicsLayer {
                                 rotationZ = if (minhasCartas.size == 2 && carta == minhasCartas.first()) -15f else 15f
                             }
-                            .background(Color.White, RoundedCornerShape(6.dp))
-                            .border(1.dp, Color.Black, RoundedCornerShape(6.dp))
+                            .background(Color.White, RoundedCornerShape(4.dp))
+                            .border(1.dp, Color.Black, RoundedCornerShape(4.dp))
                     )
                     {
                         Image(
                             painter = painterResource(id),
                             contentDescription = null,
-                            contentScale = ContentScale.Crop,
+                            contentScale = ContentScale.Fit,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(largura * 0.004f)
+                                .padding(largura * 0.002f)
                         )
                     }
                 }

@@ -3,33 +3,30 @@ package com.panopoker.ui.mesa
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.panopoker.data.network.RetrofitInstance
 import com.panopoker.data.service.MesaService
 import com.panopoker.data.session.SessionManager
 import com.panopoker.model.CartasComunitarias
-import com.panopoker.model.ShowdownDto
 import com.panopoker.model.Jogador
+import com.panopoker.model.MesaDto
+import com.panopoker.model.ShowdownDto
+import com.panopoker.network.WebSocketClient
+import com.panopoker.ui.mesa.components.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.material3.Text
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.panopoker.model.MesaDto
-
-// Componentes
-import com.panopoker.ui.mesa.components.BotaoSair
-import com.panopoker.ui.mesa.components.CartasComunitarias as CartasComunitariasComponent
-import com.panopoker.ui.mesa.components.CartasDoJogador
-import com.panopoker.ui.mesa.components.ControlesDeAcao
-import com.panopoker.ui.mesa.components.MesaImagemDeFundo
 
 @Composable
 fun MesaScreen(mesaId: Int, navController: NavController? = null) {
@@ -43,7 +40,7 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     var jogadores by remember { mutableStateOf<List<Jogador>>(emptyList()) }
     var cartas by remember { mutableStateOf<CartasComunitarias?>(null) }
     var minhasCartas by remember { mutableStateOf<List<String>>(emptyList()) }
-    var maoFormada by remember { mutableStateOf<String>("") }
+    var maoFormada by remember { mutableStateOf("") }
     var jogadorDaVezId by remember { mutableStateOf<Int?>(null) }
     var stackJogador by remember { mutableFloatStateOf(1f) }
     var raiseValue by remember { mutableFloatStateOf(0f) }
@@ -65,59 +62,74 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             try {
                 val service = RetrofitInstance.retrofit.create(MesaService::class.java)
 
-                // Busca dados da mesa em IO
                 val mesaResponse = withContext(Dispatchers.IO) {
                     service.getMesa(mesaId, "Bearer $accessToken")
                 }
                 val mesaBody = mesaResponse.body()
 
-                // Atualiza estados na Main
                 mesa = mesaBody
                 faseDaRodada = mesaBody?.estado_da_rodada
-                Log.d("🔥 MesaDebug", "🧭 Estado da rodada: $faseDaRodada")
+                Log.d("\uD83D\uDD25 MesaDebug", "\uD83D\uDCD1 Estado da rodada: $faseDaRodada")
                 jogadorDaVezId = mesaBody?.jogador_da_vez
 
-                // Busca jogadores
                 val respJogadores = withContext(Dispatchers.IO) {
                     service.getJogadoresDaMesa(mesaId, "Bearer $accessToken")
                 }
                 jogadores = (respJogadores.body() ?: emptyList()).map { it.copy() }
 
-                // Busca minhas cartas
                 val respMinhas = withContext(Dispatchers.IO) {
                     service.getMinhasCartas(mesaId, "Bearer $accessToken")
                 }
                 minhasCartas = respMinhas.body()?.cartas ?: emptyList()
                 maoFormada = respMinhas.body()?.mao_formada ?: ""
 
-                // Atualiza stack do jogador logado
                 jogadores.find { it.user_id == userIdToken }?.let {
                     stackJogador = it.saldo_atual
                 }
 
-                // Busca cartas comunitárias
                 val respComunitarias = withContext(Dispatchers.IO) {
                     service.getCartasComunitarias(mesaId, "Bearer $accessToken")
                 }
                 cartas = respComunitarias.body()?.cartas_comunitarias
-                Log.d("🔥 MesaDebug", "🃏 Cartas comunitárias: $cartas")
+                Log.d("\uD83D\uDD25 MesaDebug", "\uD83C\uDCCF Cartas comunitárias: $cartas")
 
-                // Se for showdown, busca info extra
                 if (faseDaRodada == "showdown") {
                     val respShow = withContext(Dispatchers.IO) {
                         service.getShowdown(mesaId, "Bearer $accessToken")
                     }
-                    Log.d("🔥 ShowdownDebug", "✅ Status: ${respShow.code()} - Body: ${respShow.body()}")
+                    Log.d("\uD83D\uDD25 ShowdownDebug", "✅ Status: ${respShow.code()} - Body: ${respShow.body()}")
                     if (respShow.isSuccessful) showdownInfo = respShow.body()
                 } else {
                     showdownInfo = null
                 }
 
-                Log.d("🔥 MesaDebug", "🃏 Minhas cartas: $minhasCartas | Mão formada: $maoFormada")
+                Log.d("\uD83D\uDD25 MesaDebug", "\uD83C\uDCCF Minhas cartas: $minhasCartas | Mão formada: $maoFormada")
 
             } catch (e: Exception) {
-                Log.e("🔥 MesaDebug", "❌ Erro ao atualizar mesa: ${e.message}")
+                Log.e("\uD83D\uDD25 MesaDebug", "❌ Erro ao atualizar mesa: ${e.message}")
             }
+        }
+    }
+
+    val websocketClient = remember(mesaId) {
+        WebSocketClient(
+            mesaId = mesaId,
+            onRevelarCartas = { jogadorId ->
+                jogadores = jogadores.map { jogador ->
+                    if (jogador.user_id == jogadorId) jogador.copy(participando_da_rodada = true)
+                    else jogador
+                }
+            }
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        websocketClient.connect()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            websocketClient.disconnect()
         }
     }
 
@@ -135,15 +147,17 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        // Fundo e botões fixos
         Box(modifier = Modifier.align(Alignment.Center)) { MesaImagemDeFundo() }
-        Box(modifier = Modifier.align(Alignment.TopStart)) { BotaoSair(context, mesaId, accessToken, coroutineScope) }
-        Box(modifier = Modifier.align(Alignment.Center)) { CartasComunitariasComponent(cartas = cartas, context) }
+        Box(modifier = Modifier.align(Alignment.TopStart)) {
+            BotaoSair(context, mesaId, accessToken, coroutineScope)
+        }
+        Box(modifier = Modifier.align(Alignment.Center)) {
+            CartasComunitarias(cartas = cartas, context)
+        }
 
-        // Resultado showdown
         if (faseDaRodada == "showdown" && showdownInfo != null) {
             Text(
-                text = "🏆 Vencedor(es): ${showdownInfo!!.vencedores.joinToString()} | ${showdownInfo!!.mao_formada}",
+                text = "\uD83C\uDFC6 Vencedor(es): ${showdownInfo!!.vencedores.joinToString()} | ${showdownInfo!!.mao_formada}",
                 color = Color.Yellow,
                 fontSize = 13.sp,
                 modifier = Modifier
@@ -152,7 +166,6 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             )
         }
 
-        // Cartas do jogador
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CartasDoJogador(minhasCartas, context)
@@ -163,7 +176,6 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             }
         }
 
-        // Controles de ação
         Box(modifier = Modifier.align(Alignment.BottomEnd)) {
             ControlesDeAcao(
                 jogadores = jogadores,
@@ -181,7 +193,6 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             )
         }
 
-        // Avatares
         mesa?.let {
             AvataresNaMesa(
                 jogadores = jogadores,
@@ -193,4 +204,4 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             )
         }
     }
-}//*
+} // *
