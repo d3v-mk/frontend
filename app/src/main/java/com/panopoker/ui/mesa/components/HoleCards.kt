@@ -4,38 +4,59 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.*
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.zIndex
 import com.panopoker.ui.mesa.components.CartaComAnimacaoFlip
 import com.panopoker.ui.mesa.components.nomeDaCarta
+import androidx.compose.runtime.key
+import androidx.compose.ui.Alignment
 
 @Composable
 fun HoleCards(
     cartas: List<String>,
     delayBaseMs: Int = 0,
-    offsetX: Int = 0,
-    offsetY: Int = 0,
+    cx: Float,
+    cy: Float,
+    ax: Float,
+    ay: Float,
+    tamanhoCarta: Dp,
     cadeira: Int = 0
 ) {
     val context = LocalContext.current
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier
-            .offset(x = offsetX.dp, y = offsetY.dp)
-            .zIndex(2f)
+
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize()
     ) {
-        cartas.forEachIndexed { index, carta ->
-            val resId = context.resources.getIdentifier(
-                nomeDaCarta(carta),
-                "drawable",
-                context.packageName
-            )
-            if (resId != 0) {
-                CartaComAnimacaoFlip(
-                    frenteResId = resId,
-                    delayMs = cadeira * 800 + index * 600,
-                    startTrigger = true
+        val largura = maxWidth
+        val altura = maxHeight
+        val espacamento = largura * -0.015f
+        val larguraCartas = tamanhoCarta * 2 + espacamento
+
+        val offsetX = largura * cx - (larguraCartas / 2)
+        val offsetY = altura * cy - (tamanhoCarta / 2)
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(espacamento),
+            modifier = Modifier
+                .offset(x = offsetX, y = offsetY)
+                .zIndex(2f)
+        ) {
+            cartas.forEachIndexed { index, carta ->
+                val resId = context.resources.getIdentifier(
+                    nomeDaCarta(carta),
+                    "drawable",
+                    context.packageName
                 )
+                if (resId != 0) {
+                    key(carta) {
+                        CartaComAnimacaoFlip(
+                            frenteResId = resId,
+                            delayMs = cadeira * 800 + index * 600,
+                            startTrigger = true,
+                            tamanho = tamanhoCarta
+                        )
+                    }
+                }
             }
         }
     }

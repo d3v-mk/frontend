@@ -10,36 +10,61 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.zIndex
 import com.panopoker.ui.utils.getCartaDrawable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.Density
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.graphics.graphicsLayer
 
 @Composable
 fun CartasDoJogador(minhasCartas: List<String>, context: Context) {
     if (minhasCartas.isNotEmpty()) {
-        Row(
-            modifier = Modifier
-                .offset(90.dp, -45.dp) // O .align() saiu
-                .zIndex(1f),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize()
         ) {
-            minhasCartas.forEach { carta ->
-                val id = getCartaDrawable(context, carta)
-                Box(
-                    modifier = Modifier
-                        .size(width = 45.dp, height = 65.dp)
-                        .background(Color.White, RoundedCornerShape(6.dp))
-                        .border(1.dp, Color.Black, RoundedCornerShape(6.dp))
-                ) {
-                    Image(
-                        painter = painterResource(id),
-                        contentDescription = null,
-                        contentScale = ContentScale.Fit,
+            val largura = maxWidth
+            val altura = maxHeight
+            val cartaLargura = largura * 0.05f
+            val espacamento = largura * -0.03f
+            val offsetX = largura * 0.40f
+            val offsetY = altura * 0.707f
+
+            Row(
+                modifier = Modifier
+                    .offset(x = offsetX, y = offsetY)
+                    .graphicsLayer {
+                        rotationZ = -20f // ou -10f se quiser mais suave
+                    }
+                    .zIndex(10f),
+                horizontalArrangement = Arrangement.spacedBy(espacamento)
+            ) {
+                minhasCartas.forEach { carta ->
+                    val id = getCartaDrawable(context, carta)
+                    Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(2.dp)
+                            .width(cartaLargura)
+                            .aspectRatio(0.68f)
+                            .graphicsLayer {
+                                rotationZ = if (minhasCartas.size == 2 && carta == minhasCartas.first()) -15f else 15f
+                            }
+                            .background(Color.White, RoundedCornerShape(6.dp))
+                            .border(1.dp, Color.Black, RoundedCornerShape(6.dp))
                     )
+                    {
+                        Image(
+                            painter = painterResource(id),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(largura * 0.004f)
+                        )
+                    }
                 }
             }
         }

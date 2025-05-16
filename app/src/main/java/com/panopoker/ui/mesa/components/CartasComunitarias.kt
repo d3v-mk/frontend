@@ -21,43 +21,40 @@ fun CartasComunitarias(cartas: CartasComunitarias?, context: Context) {
     cartas?.let {
         val todas = mutableListOf<String>()
 
-        // Só adiciona o flop se tiver
-        if (it.flop.isNotEmpty()) {
-            todas.addAll(it.flop)
-        }
+        if (it.flop.isNotEmpty()) todas.addAll(it.flop)
+        if (!it.turn.isNullOrBlank()) todas.add(it.turn)
+        if (!it.river.isNullOrBlank()) todas.add(it.river)
 
-        // Só adiciona o turn se já foi distribuído
-        if (!it.turn.isNullOrBlank()) {
-            todas.add(it.turn)
-        }
-
-        // Só adiciona o river se já foi distribuído
-        if (!it.river.isNullOrBlank()) {
-            todas.add(it.river)
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.wrapContentSize()
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
-            todas.forEach { carta ->
-                val id = getCartaDrawable(context, carta)
-                Box(
-                    modifier = Modifier
-                        .size(width = 50.dp, height = 75.dp)
-                        .offset(x = (-40).dp, y = (-5).dp)
-                        .background(Color.White, RoundedCornerShape(6.dp))
-                        .border(1.dp, Color.Black, RoundedCornerShape(6.dp))
-                ) {
-                    Image(
-                        painter = painterResource(id),
-                        contentDescription = null,
+            val cartaLargura = this.maxWidth * 0.068f // 👈 usa this.maxWidth se precisar ser explícito
+            val espacamento = this.maxWidth * 0.008f
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(espacamento)
+            ) {
+                todas.forEach { carta ->
+                    val id = getCartaDrawable(context, carta)
+
+                    Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(2.dp),
-                        contentScale = ContentScale.Fit
-                    )
+                            .width(cartaLargura)
+                            .aspectRatio(0.68f)
+                            .background(Color.White, RoundedCornerShape(6.dp))
+                            .border(1.dp, Color.Black, RoundedCornerShape(6.dp))
+                    ) {
+                        Image(
+                            painter = painterResource(id),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(this@BoxWithConstraints.maxWidth * 0.004f),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
             }
         }

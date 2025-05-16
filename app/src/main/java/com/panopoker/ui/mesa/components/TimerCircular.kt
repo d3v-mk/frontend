@@ -19,7 +19,7 @@ fun TimerCircular(
     cor: Color = Color.Yellow
 ) {
     Canvas(modifier = Modifier.size(tamanho)) {
-        val stroke = 6.dp.toPx()
+        val stroke = 3.dp.toPx()
         val canvasSize = this.size // <-- PEGA O size corretamente aqui
         drawArc(
             color = cor,
