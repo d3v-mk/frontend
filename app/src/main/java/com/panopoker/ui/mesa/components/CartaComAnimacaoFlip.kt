@@ -31,7 +31,7 @@ fun CartaComAnimacaoFlip(
     startTrigger: Boolean,
     tamanho: Dp
 ) {
-    val rotation = remember(startTrigger) { Animatable(180f) }
+    val rotation = remember(startTrigger) { Animatable(if (startTrigger) 180f else 0f) }
     val cameraDistance = 12 * LocalContext.current.resources.displayMetrics.density
 
     LaunchedEffect(startTrigger, frenteResId, delayMs) {
@@ -48,18 +48,19 @@ fun CartaComAnimacaoFlip(
             .graphicsLayer {
                 rotationY = rotation.value
                 this.cameraDistance = cameraDistance
-                val scale = if (rotation.value <= 90f) 1.2f else 1f
-                scaleX = scale
-                scaleY = scale
+                //val scale = if (rotation.value <= 90f) 1.2f else 1f
+                //scaleX = scale
+                //scaleY = scale
             }
     ) {
-        if (rotation.value <= 90f) {
-            CartaFrente(frenteResId)
-        } else {
+        if (!startTrigger || rotation.value > 90f) {
             CartaVerso()
+        } else {
+            CartaFrente(frenteResId)
         }
     }
 }
+
 
 @Composable
 private fun CartaFrente(frenteResId: Int) {

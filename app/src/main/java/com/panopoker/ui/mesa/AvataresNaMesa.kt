@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.panopoker.model.Jogador
 import com.panopoker.ui.mesa.components.*
+import com.panopoker.R
 
 @Composable
 fun AvataresNaMesa(
@@ -39,6 +40,7 @@ fun AvataresNaMesa(
     ) {
         val largura = maxWidth
         val altura = maxHeight
+        val context = LocalContext.current
 
         val avatarPositions = listOf(
             0.5f to 0.82f,
@@ -59,19 +61,15 @@ fun AvataresNaMesa(
         )
 
         val cartaPositions = listOf(
-            0.47f to 0.78f,
-            0.12f to 0.62f,
-            0.18f to 0.26f,
-            0.5f to 0.02f,
-            0.82f to 0.21f,
-            0.88f to 0.55f
+            0.5f to 0.90f,
+            0.5f to 0.5f,
+            0.5f to 0.5f,
+            0.5f to 0.5f,
+            0.5f to 0.5f,
+            0.5f to 0.5f
         )
 
-        val holeCardsPositions = cartaPositions
-
         val tamanhoCarta = largura * 0.05f
-
-        Log.d("AvataresNaMesa", "Seats: $seats | UserSeat: $userSeat | Phase: $faseDaRodada")
 
         if ((mostrarFlop || mostrarTurn || mostrarRiver || mostrarShowdown) && poteTotal > 0f) {
             Box(
@@ -84,7 +82,6 @@ fun AvataresNaMesa(
             }
         }
 
-        // 🔁 LOOP dos jogadores
         seats.forEachIndexed { seatIndex, jogadorOriginal ->
             if (jogadorOriginal == null) return@forEachIndexed
             key(jogadorOriginal.user_id) {
@@ -92,15 +89,14 @@ fun AvataresNaMesa(
                 val (ax, ay) = avatarPositions[visualIndex]
                 val (fx, fy) = fichaPositions[visualIndex]
                 val (cx, cy) = cartaPositions[visualIndex]
-                val (hx, hy) = holeCardsPositions[visualIndex]
 
                 val avatarOffset = largura * (ax - 0.5f) to altura * (ay - 0.5f)
                 val fichaOffset = largura * (fx - 0.5f) to altura * (fy - 0.5f)
+                val cartaOffset = largura * (cx - 0.5f) to altura * (cy - 0.5f)
 
                 val isVez = jogadorDaVezId == jogadorOriginal.user_id
                 val jogador = jogadorOriginal.copy(vez = isVez)
 
-                // AVATAR + FICHAS + CARTAS FECHADAS
                 Box(
                     modifier = Modifier
                         .offset(x = avatarOffset.first, y = avatarOffset.second)
@@ -122,49 +118,45 @@ fun AvataresNaMesa(
                         }
                     }
 
-                    if (!mostrarShowdown && jogador.user_id != usuarioLogadoId) {
+                    if (jogador.user_id != usuarioLogadoId) {
+                        val espacamento = tamanhoCarta * -0.3f
+                        val larguraCartas = tamanhoCarta * 2 + espacamento
+
+                        val deveRevelar = mostrarShowdown && jogador.cartas.size == 2
+                        val cartas = if (deveRevelar) jogador.cartas else listOf("placeholder1", "placeholder2")
+
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(largura * -0.03f),
+                            horizontalArrangement = Arrangement.spacedBy(espacamento),
                             modifier = Modifier
-                                .offset(
-                                    x = largura * (cx - ax),
-                                    y = altura * (cy - ay)
-                                )
+                                .offset(x = cartaOffset.first, y = cartaOffset.second)
                                 .align(Alignment.Center)
                                 .zIndex(2f)
                         ) {
-                            repeat(2) {
+                            cartas.forEachIndexed { index, carta ->
+                                val resId = if (deveRevelar)
+                                    context.resources.getIdentifier(
+                                        nomeDaCarta(carta),
+                                        "drawable",
+                                        context.packageName
+                                    )
+                                else R.drawable.carta_back
+
                                 CartaComAnimacaoFlip(
-                                    frenteResId = com.panopoker.R.drawable.carta_back,
-                                    delayMs = 0,
-                                    startTrigger = false,
+                                    frenteResId = resId,
+                                    delayMs = jogador.posicao_cadeira * 800 + index * 600,
+                                    startTrigger = deveRevelar,
                                     tamanho = tamanhoCarta
                                 )
                             }
                         }
                     }
                 }
-
-                // CARTAS DO SHOWDOWN
-                if (mostrarShowdown && jogador.user_id != usuarioLogadoId) {
-                    HoleCards(
-                        cartas = jogador.cartas,
-                        delayBaseMs = jogador.posicao_cadeira * 600,
-                        cx = cx,
-                        cy = cy,
-                        ax = ax,
-                        ay = ay,
-                        cadeira = jogador.posicao_cadeira,
-                        tamanhoCarta = tamanhoCarta
-                    )
-                }
             }
         }
 
-        // 🃏 CARTAS DO JOGADOR LOGADO — renderizadas por cima de tudo
         CartasDoJogador(
             minhasCartas = jogadores.find { it.user_id == usuarioLogadoId }?.cartas ?: emptyList(),
-            context = LocalContext.current
+            context = context
         )
     }
 }
