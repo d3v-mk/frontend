@@ -59,6 +59,7 @@ fun AvatarJogador(jogador: Jogador) {
         val fontSizeBlind = maxWidth.value * 0.014f
         val paddingHorizontal = maxWidth * 0.005f
         val paddingVertical = maxWidth * 0.003f
+        val dealerSize = maxWidth * 0.016f // 👈 ajusta conforme tela
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -129,6 +130,23 @@ fun AvatarJogador(jogador: Jogador) {
                             fontSize = fontSizeBlind.sp,
                             fontWeight = FontWeight.Bold
                         )
+                    }
+
+
+                    if (jogador.is_dealer) {
+                        Box(
+                            modifier = Modifier
+                                .size(dealerSize)
+                                .background(Color.White, shape = CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "D",
+                                color = Color.Black,
+                                fontSize = (dealerSize.value * 0.6f).sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }

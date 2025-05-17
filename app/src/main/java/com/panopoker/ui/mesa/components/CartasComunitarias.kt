@@ -15,6 +15,9 @@ import androidx.compose.ui.unit.dp
 import com.panopoker.model.CartasComunitarias
 import com.panopoker.ui.utils.getCartaDrawable
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.unit.dp
+
 
 @Composable
 fun CartasComunitarias(cartas: CartasComunitarias?, context: Context) {
@@ -26,13 +29,16 @@ fun CartasComunitarias(cartas: CartasComunitarias?, context: Context) {
         if (!it.river.isNullOrBlank()) todas.add(it.river)
 
         BoxWithConstraints(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            val cartaLargura = this.maxWidth * 0.068f // 👈 usa this.maxWidth se precisar ser explícito
+            val cartaLargura = this.maxWidth * 0.065f // 👈 usa this.maxWidth se precisar ser explícito
             val espacamento = this.maxWidth * 0.008f
 
             Row(
+                modifier = Modifier
+                    .offset(x = maxWidth * -0.02f), // mexe o conjunto horizontalmente
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(espacamento)
             ) {
@@ -51,7 +57,7 @@ fun CartasComunitarias(cartas: CartasComunitarias?, context: Context) {
                             contentDescription = null,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(this@BoxWithConstraints.maxWidth * 0.004f),
+                                .padding(this@BoxWithConstraints.maxWidth * 0.002f),
                             contentScale = ContentScale.Crop
                         )
                     }

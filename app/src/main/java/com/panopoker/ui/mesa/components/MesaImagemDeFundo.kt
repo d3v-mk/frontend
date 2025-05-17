@@ -25,16 +25,12 @@ fun MesaImagemDeFundo() {
             .fillMaxSize()
             .zIndex(0f)
     ) {
-        val proporcaoImagem = 750f / 700f // altura / largura
 
         Image(
             painter = painterResource(id = R.drawable.mesa_pano),
             contentDescription = null,
             contentScale = ContentScale.FillBounds,
-            modifier = Modifier
-                .fillMaxWidth(0.92f) // 👈 ocupa 90% da largura da tela
-                .aspectRatio(proporcaoImagem) // mantém a proporção
-                .align(Alignment.Center)
+            modifier = Modifier.fillMaxSize() // NADA DE fillMaxWidth
         )
     }
 }

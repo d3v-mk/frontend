@@ -20,6 +20,9 @@ import android.media.MediaPlayer
 import androidx.compose.ui.platform.LocalContext
 import com.panopoker.R
 
+import androidx.compose.ui.graphics.TransformOrigin
+
+
 
 
 
@@ -64,81 +67,101 @@ fun ControlesDeAcao(
 
     if (mostrarSlider) {
         Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomEnd
+            modifier = Modifier
+                .fillMaxSize()
         ) {
-            Column(
+            // WRAPPER para posicionar tudo fixo no canto inferior direito
+            Box(
                 modifier = Modifier
-                    .padding(end = 16.dp, bottom = 16.dp)
-                    .width(280.dp),
-                horizontalAlignment = Alignment.End
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 35.dp, bottom = 300.dp) // Distância dos botões
             ) {
-                Text(
-                    text = "Raise: R$ %.2f".format(raiseValue),
-                    color = Color.White,
-                    fontSize = 16.sp,
+                // SLIDER ROTACIONADO
+                Box(
                     modifier = Modifier
-                        .padding(bottom = 4.dp)
-                        .fillMaxWidth(),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-
-
-                Slider(
-                    value = raiseValue,
-                    onValueChange = onSliderChange,
-                    valueRange = 0.01f..sliderMax,
-                    steps = 50,
-                    modifier = Modifier.width(240.dp),
-                    colors = SliderDefaults.colors(
-                        thumbColor = Color(0xFFFFC107),
-                        activeTrackColor = Color(0xFFFFC107),
-                        inactiveTrackColor = Color.DarkGray
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = onEsconderSlider,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                        modifier = Modifier.height(36.dp).width(110.dp)
-                    ) {
-                        Text("Cancelar", color = Color.White, fontSize = 12.sp)
-                    }
-
-                    Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                try {
-                                    val service = RetrofitInstance.retrofit.create(MesaService::class.java)
-
-                                    val response = if (raiseValue >= sliderMax) {
-                                        service.allInJWT(mesaId, "Bearer $accessToken")
-                                    } else {
-                                        service.raiseJWT(mesaId, raiseLimpo, "Bearer $accessToken")
-                                    }
-
-                                    // Só esconde o slider e dá refresh DEPOIS que a resposta voltar:
-                                    if (response.isSuccessful) {
-                                        onEsconderSlider()
-                                        delay(100) // só um respiro, nem precisa ser 500
-                                        onRefresh()
-                                    }
-
-                                } catch (_: Exception) {}
-                            }
+                        .width(235.dp) // Altura visual do slider
+                        .height(40.dp) // Espessura
+                        .graphicsLayer {
+                            rotationZ = -90f
+                            transformOrigin = TransformOrigin(1f, 1f) // Gira do canto inferior direito
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0066CC)),
-                        modifier = Modifier.height(36.dp).width(110.dp)
-                    ) {
-                        Text("Confirmar", color = Color.White, fontSize = 12.sp)
-                    }
+                    contentAlignment = Alignment.Center
+                ) {
+                    Slider(
+                        value = raiseValue,
+                        onValueChange = onSliderChange,
+                        valueRange = 0.01f..sliderMax,
+                        steps = 50,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = SliderDefaults.colors(
+                            thumbColor = Color(0xFFFFC107),
+                            activeTrackColor = Color(0xFFFFC107),
+                            inactiveTrackColor = Color.DarkGray
+                        )
+                    )
+                }
+
+                // TEXTO ACIMA DA BARRA
+                Text(
+                    text = "%.2f".format(raiseValue),
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd) // Alinha o texto no canto superior direito
+                        .padding(top = 20.dp, end = 8.dp) // Ajusta a distância do texto em relação ao topo e à borda direita
+                )
+            }
+
+            // BOTÕES CONFIRMAR / CANCELAR
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 16.dp)
+            ) {
+                Button(
+                    onClick = onEsconderSlider,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    modifier = Modifier
+                        .height(36.dp)
+                        .width(110.dp)
+                ) {
+                    Text("Cancelar", color = Color.White, fontSize = 12.sp)
+                }
+
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            try {
+                                val service = RetrofitInstance.retrofit.create(MesaService::class.java)
+
+                                val response = if (raiseValue >= sliderMax) {
+                                    service.allInJWT(mesaId, "Bearer $accessToken")
+                                } else {
+                                    service.raiseJWT(mesaId, raiseLimpo, "Bearer $accessToken")
+                                }
+
+                                if (response.isSuccessful) {
+                                    onEsconderSlider()
+                                    delay(100)
+                                    onRefresh()
+                                }
+                            } catch (_: Exception) {}
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0066CC)),
+                    modifier = Modifier
+                        .height(36.dp)
+                        .width(110.dp)
+                ) {
+                    Text("Confirmar", color = Color.White, fontSize = 12.sp)
                 }
             }
         }
-    }
+    }///
+
+
+
 
 
 

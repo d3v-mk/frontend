@@ -26,24 +26,24 @@
         android:theme="@style/Theme.Panopoker"
         tools:targetApi="31">
 
-
         <!-- Config Google OAuth -->
         <meta-data
             android:name="com.google.android.gms.auth.api.signin.DEFAULT_WEB_CLIENT_ID"
             android:value="477222874066-0rb8c3o8hsms1kjbdlcitplnvkbvtbkp.apps.googleusercontent.com" />
 
-        <!-- Tela de mesa sempre em modo paisagem -->
+        <!-- Tela de mesa SEMPRE em modo paisagem e fullscreen real -->
         <activity
             android:name=".ui.mesa.MesaActivity"
+            android:exported="false"
             android:screenOrientation="landscape"
-            android:configChanges="orientation|screenSize"
+            android:configChanges="orientation|screenSize|layoutDirection|keyboardHidden"
             android:theme="@style/Theme.Panopoker" />
 
         <!-- Atividade principal -->
         <activity
             android:name=".MainActivity"
-            android:theme="@style/Theme.Panopoker"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.Panopoker">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

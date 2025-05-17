@@ -44,32 +44,32 @@ fun AvataresNaMesa(
 
         val avatarPositions = listOf(
             0.5f to 0.82f, //ok
-            0.12f to 0.62f,
-            0.18f to 0.26f,
+            0.21f to 0.74f, //ok
+            0.21f to 0.20f, //ok
             0.5f to 0.15f, //ok
-            0.82f to 0.26f,
-            0.88f to 0.62f
+            0.77f to 0.20f, //ok
+            0.77f to 0.74f
         )
 
         val fichaPositions = listOf(
-            0.5f to 0.66f,
-            0.12f to 0.68f,
-            0.18f to 0.32f,
-            0.5f to 0.14f,
-            0.82f to 0.32f,
-            0.88f to 0.68f
+            0.5f to 0.63f,
+            0.21f to 0.56f,
+            0.21f to 0.39f, //
+            0.5f to 0.33f, //
+            0.77f to 0.38f, //
+            0.77f to 0.56f
         )
 
         val cartaPositions = listOf(
             0.5f to 0.90f,
-            0.5f to 0.5f,
-            0.5f to 0.5f,
-            0.5f to 0.5f,
-            0.5f to 0.5f,
-            0.5f to 0.5f
+            0.45f to 0.5f,
+            0.45f to 0.5f,
+            0.45f to 0.5f,
+            0.45f to 0.5f,
+            0.45f to 0.5f
         )
 
-        val tamanhoCarta = largura * 0.037f
+        val tamanhoCarta = largura * 0.046f
 
         if ((mostrarFlop || mostrarTurn || mostrarRiver || mostrarShowdown) && poteTotal > 0f) {
             Box(

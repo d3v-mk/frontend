@@ -61,15 +61,12 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
         coroutineScope.launch {
             try {
                 val service = RetrofitInstance.retrofit.create(MesaService::class.java)
-
                 val mesaResponse = withContext(Dispatchers.IO) {
                     service.getMesa(mesaId, "Bearer $accessToken")
                 }
                 val mesaBody = mesaResponse.body()
-
                 mesa = mesaBody
                 faseDaRodada = mesaBody?.estado_da_rodada
-                Log.d("\uD83D\uDD25 MesaDebug", "\uD83D\uDCD1 Estado da rodada: $faseDaRodada")
                 jogadorDaVezId = mesaBody?.jogador_da_vez
 
                 val respJogadores = withContext(Dispatchers.IO) {
@@ -91,20 +88,15 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                     service.getCartasComunitarias(mesaId, "Bearer $accessToken")
                 }
                 cartas = respComunitarias.body()?.cartas_comunitarias
-                Log.d("\uD83D\uDD25 MesaDebug", "\uD83C\uDCCF Cartas comunitárias: $cartas")
 
                 if (faseDaRodada == "showdown") {
                     val respShow = withContext(Dispatchers.IO) {
                         service.getShowdown(mesaId, "Bearer $accessToken")
                     }
-                    Log.d("\uD83D\uDD25 ShowdownDebug", "✅ Status: ${respShow.code()} - Body: ${respShow.body()}")
                     if (respShow.isSuccessful) showdownInfo = respShow.body()
                 } else {
                     showdownInfo = null
                 }
-
-                Log.d("\uD83D\uDD25 MesaDebug", "\uD83C\uDCCF Minhas cartas: $minhasCartas | Mão formada: $maoFormada")
-
             } catch (e: Exception) {
                 Log.e("\uD83D\uDD25 MesaDebug", "❌ Erro ao atualizar mesa: ${e.message}")
             }
@@ -123,15 +115,8 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
         )
     }
 
-    LaunchedEffect(Unit) {
-        websocketClient.connect()
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            websocketClient.disconnect()
-        }
-    }
+    LaunchedEffect(Unit) { websocketClient.connect() }
+    DisposableEffect(Unit) { onDispose { websocketClient.disconnect() } }
 
     LaunchedEffect(Unit) {
         refreshMesa()
@@ -154,7 +139,6 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
         Box(modifier = Modifier.align(Alignment.Center)) {
             CartasComunitarias(cartas = cartas, context)
         }
-
         if (faseDaRodada == "showdown" && showdownInfo != null) {
             Text(
                 text = "\uD83C\uDFC6 Vencedor(es): ${showdownInfo!!.vencedores.joinToString()} | ${showdownInfo!!.mao_formada}",
@@ -162,10 +146,10 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                 fontSize = 13.sp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .offset(x = 300.dp, y = 236.dp)
+                    .padding(top = 16.dp)
+                    .align(Alignment.TopCenter)
             )
         }
-
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CartasDoJogador(minhasCartas, context)
@@ -192,7 +176,6 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                 onRefresh = { refreshMesa() }
             )
         }
-
         mesa?.let {
             AvataresNaMesa(
                 jogadores = jogadores,
@@ -204,4 +187,4 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             )
         }
     }
-} // *
+}

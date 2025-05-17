@@ -18,6 +18,7 @@ data class Jogador(
     val is_sb: Boolean,
     val avatarUrl: String?,
     val is_bb: Boolean,
-    )
+    val is_dealer: Boolean,
+)
 
 
