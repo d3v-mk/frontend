@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.panopoker.data.network.RetrofitInstance
 import com.panopoker.data.service.MesaService
@@ -119,6 +120,7 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     DisposableEffect(Unit) { onDispose { websocketClient.disconnect() } }
 
     LaunchedEffect(Unit) {
+        Log.d("🔥 DEBUG", "maoFormada: $maoFormada")
         refreshMesa()
         delay(500)
         while (true) {
@@ -132,7 +134,13 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        Box(modifier = Modifier.align(Alignment.Center)) { MesaImagemDeFundo() }
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .zIndex(0f)
+        ) {
+            MesaImagemDeFundo()
+        }
         Box(modifier = Modifier.align(Alignment.TopStart)) {
             BotaoSair(context, mesaId, accessToken, coroutineScope)
         }
@@ -149,15 +157,6 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                     .padding(top = 16.dp)
                     .align(Alignment.TopCenter)
             )
-        }
-        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CartasDoJogador(minhasCartas, context)
-                if (maoFormada.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = "Mão formada: $maoFormada", color = Color.White)
-                }
-            }
         }
 
         Box(modifier = Modifier.align(Alignment.BottomEnd)) {
@@ -183,7 +182,9 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                 usuarioLogadoId = usuarioLogadoId,
                 faseDaRodada = faseDaRodada,
                 poteTotal = it.pote_total.toFloat(),
+                maoFormada = maoFormada, // <- aqui!
                 apostaAtualMesa = it.aposta_atual.toFloat()
+
             )
         }
     }

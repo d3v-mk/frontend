@@ -8,10 +8,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.panopoker.model.Jogador
 import com.panopoker.ui.mesa.components.*
 import com.panopoker.R
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun AvataresNaMesa(
@@ -20,7 +24,8 @@ fun AvataresNaMesa(
     usuarioLogadoId: Int,
     faseDaRodada: String?,
     poteTotal: Float,
-    apostaAtualMesa: Float
+    apostaAtualMesa: Float,
+    maoFormada: String
 ) {
     val mostrarFlop = faseDaRodada.equals("flop", ignoreCase = true)
     val mostrarTurn = faseDaRodada.equals("turn", ignoreCase = true)
@@ -43,20 +48,20 @@ fun AvataresNaMesa(
         val context = LocalContext.current
 
         val avatarPositions = listOf(
-            0.5f to 0.82f, //ok
-            0.21f to 0.74f, //ok
-            0.21f to 0.20f, //ok
-            0.5f to 0.15f, //ok
-            0.77f to 0.20f, //ok
+            0.5f to 0.82f,
+            0.21f to 0.74f,
+            0.21f to 0.20f,
+            0.5f to 0.15f,
+            0.77f to 0.20f,
             0.77f to 0.74f
         )
 
         val fichaPositions = listOf(
             0.5f to 0.63f,
             0.21f to 0.56f,
-            0.21f to 0.39f, //
-            0.5f to 0.33f, //
-            0.77f to 0.38f, //
+            0.21f to 0.39f,
+            0.5f to 0.33f,
+            0.77f to 0.38f,
             0.77f to 0.56f
         )
 
@@ -103,6 +108,23 @@ fun AvataresNaMesa(
                         .align(Alignment.Center)
                 ) {
                     AvatarJogador(jogador)
+
+                    // 👉 MÃO FORMADA EXIBIDA DO LADO DO AVATAR DO JOGADOR LOGADO
+                    if (jogador.user_id == usuarioLogadoId && maoFormada.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .offset(x = 82.dp, y = (-10).dp) // Ajusta posição do texto ao lado do avatar
+                                .align(Alignment.Center)
+                                .zIndex(10f)
+                        ) {
+                            Text(
+                                text = maoFormada,
+                                color = Color.Yellow, // dourado bonito
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
 
                     if (jogador.aposta_atual > 0f && !mostrarShowdown) {
                         Box(
@@ -159,4 +181,4 @@ fun AvataresNaMesa(
             context = context
         )
     }
-}///
+}
