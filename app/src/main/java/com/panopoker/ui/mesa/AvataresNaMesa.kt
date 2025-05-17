@@ -57,7 +57,7 @@ fun AvataresNaMesa(
         )
 
         val fichaPositions = listOf(
-            0.5f to 0.63f,
+            0.5f to 0.644f,
             0.21f to 0.56f,
             0.21f to 0.39f,
             0.5f to 0.33f,
@@ -76,16 +76,6 @@ fun AvataresNaMesa(
 
         val tamanhoCarta = largura * 0.046f
 
-        if ((mostrarFlop || mostrarTurn || mostrarRiver || mostrarShowdown) && poteTotal > 0f) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = altura * 0.3f)
-                    .zIndex(4f)
-            ) {
-                FichaAposta(valor = poteTotal)
-            }
-        }
 
         seats.forEachIndexed { seatIndex, jogadorOriginal ->
             if (jogadorOriginal == null) return@forEachIndexed

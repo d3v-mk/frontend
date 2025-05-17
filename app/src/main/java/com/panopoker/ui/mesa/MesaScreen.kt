@@ -37,6 +37,7 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     val userIdToken = session.getUserIdFromToken(accessToken) ?: -99
     val coroutineScope = rememberCoroutineScope()
 
+    // Estados principais
     var faseDaRodada by remember { mutableStateOf<String?>(null) }
     var jogadores by remember { mutableStateOf<List<Jogador>>(emptyList()) }
     var cartas by remember { mutableStateOf<CartasComunitarias?>(null) }
@@ -50,6 +51,7 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     var mesa by remember { mutableStateOf<MesaDto?>(null) }
     val usuarioLogadoId = session.fetchUserId()
 
+    // Controle de slider
     LaunchedEffect(mostrarSlider) {
         if (mostrarSlider) {
             val jogadorAtual = jogadores.find { it.user_id == userIdToken }
@@ -58,6 +60,7 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
         }
     }
 
+    // Função de refresh da mesa
     fun refreshMesa() {
         coroutineScope.launch {
             try {
@@ -104,6 +107,7 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
         }
     }
 
+    // WebSocket
     val websocketClient = remember(mesaId) {
         WebSocketClient(
             mesaId = mesaId,
@@ -119,8 +123,8 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     LaunchedEffect(Unit) { websocketClient.connect() }
     DisposableEffect(Unit) { onDispose { websocketClient.disconnect() } }
 
+    // Loop de atualização
     LaunchedEffect(Unit) {
-        Log.d("🔥 DEBUG", "maoFormada: $maoFormada")
         refreshMesa()
         delay(500)
         while (true) {
@@ -129,36 +133,44 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
         }
     }
 
+    // Layout principal da mesa
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .zIndex(0f)
-        ) {
+        // Imagem de fundo
+        Box(modifier = Modifier.align(Alignment.Center).zIndex(0f)) {
             MesaImagemDeFundo()
         }
+
+        // Botão de sair
         Box(modifier = Modifier.align(Alignment.TopStart)) {
             BotaoSair(context, mesaId, accessToken, coroutineScope)
         }
+
+        // Cartas comunitárias
         Box(modifier = Modifier.align(Alignment.Center)) {
-            CartasComunitarias(cartas = cartas, context)
-        }
-        if (faseDaRodada == "showdown" && showdownInfo != null) {
-            Text(
-                text = "\uD83C\uDFC6 Vencedor(es): ${showdownInfo!!.vencedores.joinToString()} | ${showdownInfo!!.mao_formada}",
-                color = Color.Yellow,
-                fontSize = 13.sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-                    .align(Alignment.TopCenter)
-            )
+            CartasComunitarias(cartas = cartas, context = context)
         }
 
+        // Vencedores do showdown
+        if (faseDaRodada == "showdown") {
+            showdownInfo?.let { info ->
+                VencedoresShowdown(
+                    vencedores = info.vencedores,
+                    maoFormada = info.mao_formada
+                )
+            }
+        }
+
+        // Fichas do pote
+        MainPot(
+            poteTotal = mesa?.pote_total?.toFloat() ?: 0f,
+            faseDaRodada = faseDaRodada
+        )
+
+        // Controles de ação
         Box(modifier = Modifier.align(Alignment.BottomEnd)) {
             ControlesDeAcao(
                 jogadores = jogadores,
@@ -175,6 +187,8 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                 onRefresh = { refreshMesa() }
             )
         }
+
+        // Avatares na mesa
         mesa?.let {
             AvataresNaMesa(
                 jogadores = jogadores,
@@ -182,9 +196,8 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                 usuarioLogadoId = usuarioLogadoId,
                 faseDaRodada = faseDaRodada,
                 poteTotal = it.pote_total.toFloat(),
-                maoFormada = maoFormada, // <- aqui!
+                maoFormada = maoFormada,
                 apostaAtualMesa = it.aposta_atual.toFloat()
-
             )
         }
     }
