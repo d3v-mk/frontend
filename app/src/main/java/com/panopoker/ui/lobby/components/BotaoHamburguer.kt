@@ -106,19 +106,13 @@ fun MenuLateralCompleto(
                     }
                 }
 
-                DrawerItem("Depositar") {
+                DrawerItem("Promotores") {
                     scope.launch {
                         drawerState.close()
-                        navController.navigate("deposito")
+                        navController.navigate("promotores")
                     }
                 }
 
-                DrawerItem("Saque") {
-                    scope.launch {
-                        drawerState.close()
-                        navController.navigate("saque")
-                    }
-                }
                 DrawerItem("Configurações") { /* implementar depois */ }
                 DrawerItem("Sair") { /* implementar depois */ }
             }

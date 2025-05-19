@@ -7,7 +7,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.panopoker.ui.auth.LoginScreen
 import com.panopoker.ui.auth.RegisterScreen
-import com.panopoker.ui.financas.DepositoScreen
 import com.panopoker.ui.lobby.LobbyScreen
 import com.panopoker.ui.lobby.MesasPokerScreen
 import com.panopoker.ui.mesa.MesaScreen
@@ -15,8 +14,8 @@ import com.panopoker.ui.splash.SplashScreen
 import com.panopoker.ui.lobby.MesasBronzeScreen
 import com.panopoker.ui.lobby.MesasOuroScreen
 import com.panopoker.ui.lobby.MesasPrataScreen
-import com.panopoker.ui.saque.SaqueScreen
 import com.panopoker.ui.perfil.PerfilScreen
+import com.panopoker.ui.financas.PromotoresScreen
 
 
 @Composable
@@ -74,13 +73,10 @@ fun PanoPokerNav() {
             MesasOuroScreen()
         }
 
-        composable("deposito") {
-            DepositoScreen(navController)
+        composable("promotores") {
+            PromotoresScreen(navController = navController)
         }
 
-        composable("saque") {
-            SaqueScreen()
-        }
 
         composable("mesa/{mesaId}") { backStackEntry ->
             val mesaId = backStackEntry.arguments?.getString("mesaId")?.toIntOrNull()

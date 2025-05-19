@@ -46,7 +46,12 @@ fun AvatarJogador(jogador: Jogador) {
     }
 
     val progresso = tempoRestante / tempoTotal.toFloat()
-    val finalAvatarUrl = jogador.avatarUrl ?: "https://i.imgur.com/q0fxp3t.jpeg"
+
+    val avatarTimestamp = remember { System.currentTimeMillis() }
+    val finalAvatarUrl = jogador.avatarUrl?.let {
+        "$it?v=$avatarTimestamp"
+    } ?: "https://i.imgur.com/q0fxp3t.jpeg"
+
 
     BoxWithConstraints(
         modifier = Modifier.zIndex(1f)
