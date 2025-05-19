@@ -51,6 +51,10 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     var mesa by remember { mutableStateOf<MesaDto?>(null) }
     val usuarioLogadoId = session.fetchUserId()
 
+    //
+    var cartasComunitarias by remember { mutableStateOf(listOf<String>()) }
+    var estadoRodada by remember { mutableStateOf("") }
+
     // Controle de slider
     LaunchedEffect(mostrarSlider) {
         if (mostrarSlider) {
@@ -116,22 +120,47 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                     if (jogador.user_id == jogadorId) jogador.copy(participando_da_rodada = true)
                     else jogador
                 }
-            }
+            },
+
+            onMesaAtualizada = {
+                Log.d("WS", "🌀 Atualizando mesa via WebSocket")
+                refreshMesa()
+            },
+
+            onNovaFase = { estado, novasCartas ->
+                Log.d("WS", "🌊 Nova fase: $estado")
+                estadoRodada = estado
+                cartasComunitarias = cartasComunitarias + novasCartas
+            },
+
+            onShowdown = { json ->
+                Log.d("MesaScreen", "👑 Dados do showdown: $json")
+                // aqui você pode setar um estado com os vencedores e mostrar as cartas de todos
+            }//<3!!!
         )
     }
 
-    LaunchedEffect(Unit) { websocketClient.connect() }
-    DisposableEffect(Unit) { onDispose { websocketClient.disconnect() } }
 
-    // Loop de atualização
     LaunchedEffect(Unit) {
-        refreshMesa()
-        delay(500)
-        while (true) {
-            refreshMesa()
-            delay(2000)
+        websocketClient.connect()
+        refreshMesa() // 👈 isso resolve o "avatar não aparece quando entra sozinho"
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            websocketClient.disconnect()
         }
     }
+
+    // Loop de atualização
+//    LaunchedEffect(Unit) {
+//        refreshMesa()
+//        delay(500)
+//        while (true) {
+//            refreshMesa()
+//            delay(2000)
+//        }
+//    }
 
     // Layout principal da mesa
     Box(

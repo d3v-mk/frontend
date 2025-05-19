@@ -144,7 +144,7 @@ fun ControlesDeAcao(
                                 if (response.isSuccessful) {
                                     onEsconderSlider()
                                     delay(100)
-                                    onRefresh()
+                                    //onRefresh()
                                 }
                             } catch (_: Exception) {}
                         }
@@ -181,7 +181,7 @@ fun ControlesDeAcao(
                                 val resp = service.revelarCartas(mesaId, "Bearer $accessToken")
                                 if (resp.isSuccessful) {
                                     delay(200)
-                                    onRefresh()
+                                    //onRefresh()
                                 }
                             } catch (_: Exception) {}
                         }
@@ -206,7 +206,7 @@ fun ControlesDeAcao(
                             RetrofitInstance.retrofit.create(MesaService::class.java)
                                 .foldJWT(mesaId, "Bearer $accessToken")
                             delay(500)
-                            onRefresh()
+                            //onRefresh()
                         } catch (_: Exception) {}
                     }
                 },
@@ -228,7 +228,7 @@ fun ControlesDeAcao(
                                 service.checkJWT(mesaId, "Bearer $accessToken")
                             }
                             delay(500)
-                            onRefresh()
+                            //onRefresh()
                         } catch (_: Exception) {}
                     }
                 },
