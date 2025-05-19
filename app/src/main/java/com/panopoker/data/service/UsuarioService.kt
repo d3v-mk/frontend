@@ -11,6 +11,8 @@ import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Path
+
 
 data class SaldoResponse(val saldo: Float)
 
@@ -23,6 +25,11 @@ interface UsuarioService {
         @Part avatar: MultipartBody.Part
     ): Response<AvatarUploadResponse> // ⬅️ estava Response<Unit>, tem que retornar esse DTO
 
+    @GET("/usuario/perfil/{user_id}")
+    suspend fun getPerfilDeOutroUsuario(
+        @Path("user_id") userId: Int,
+        @Header("Authorization") token: String
+    ): Response<PerfilResponse>
 
     @GET("usuario/saldo")
     suspend fun getSaldo(@Header("Authorization") token: String): Response<SaldoResponse>

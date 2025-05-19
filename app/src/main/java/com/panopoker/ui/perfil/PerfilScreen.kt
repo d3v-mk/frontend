@@ -165,7 +165,8 @@ fun PerfilScreen(navController: NavController) {
                 "Torneios vencidos" to user.torneios_vencidos,
                 "Maior pote ganho" to "R$ %.2f".format(user.maior_pote),
                 "Fichas ganhas" to "R$ %.2f".format(user.fichas_ganhas),
-                "Fichas perdidas" to "R$ %.2f".format(user.fichas_perdidas)
+                //"Fichas perdidas" to "R$ %.2f".format(user.fichas_perdidas)
+                //"Mão favorita" to (user.mao_favorita ?: "—")
             )
 
             LazyVerticalGrid(

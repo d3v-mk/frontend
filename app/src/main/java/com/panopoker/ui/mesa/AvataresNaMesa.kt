@@ -25,6 +25,7 @@ fun AvataresNaMesa(
     faseDaRodada: String?,
     poteTotal: Float,
     apostaAtualMesa: Float,
+    onClickJogador: (Jogador) -> Unit,
     maoFormada: String
 ) {
     val mostrarFlop = faseDaRodada.equals("flop", ignoreCase = true)
@@ -97,7 +98,10 @@ fun AvataresNaMesa(
                         .offset(x = avatarOffset.first, y = avatarOffset.second)
                         .align(Alignment.Center)
                 ) {
-                    AvatarJogador(jogador)
+                    AvatarJogador(
+                        jogador = jogador,
+                        onClickJogador = onClickJogador
+                    )
 
                     // 👉 MÃO FORMADA EXIBIDA DO LADO DO AVATAR DO JOGADOR LOGADO
                     if (jogador.user_id == usuarioLogadoId && maoFormada.isNotEmpty()) {

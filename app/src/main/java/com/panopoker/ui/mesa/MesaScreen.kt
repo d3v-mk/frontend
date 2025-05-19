@@ -21,6 +21,7 @@ import com.panopoker.data.session.SessionManager
 import com.panopoker.model.CartasComunitarias
 import com.panopoker.model.Jogador
 import com.panopoker.model.MesaDto
+import com.panopoker.model.PerfilResponse
 import com.panopoker.model.ShowdownDto
 import com.panopoker.network.WebSocketClient
 import com.panopoker.ui.mesa.components.*
@@ -28,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.panopoker.ui.mesa.components.PerfilDoJogadorDialog
 
 @Composable
 fun MesaScreen(mesaId: Int, navController: NavController? = null) {
@@ -54,6 +56,14 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     //
     var cartasComunitarias by remember { mutableStateOf(listOf<String>()) }
     var estadoRodada by remember { mutableStateOf("") }
+
+    // jogador dialog
+    var jogadorSelecionado by remember { mutableStateOf<Jogador?>(null) }
+    val mostrarDialog = remember { mutableStateOf(false) }
+    val perfilSelecionado = remember { mutableStateOf<PerfilResponse?>(null) }
+
+
+
 
     // Controle de slider
     LaunchedEffect(mostrarSlider) {
@@ -110,6 +120,28 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             }
         }
     }
+
+    fun carregarPerfilDoJogador(userId: Int) {
+        Log.d("DialogDebug", "🔍 Buscando perfil do jogador $userId")
+        coroutineScope.launch {
+            try {
+                val token = "Bearer $accessToken"
+                val service = RetrofitInstance.usuarioApi
+                val response = service.getPerfilDeOutroUsuario(userId, token)
+
+                if (response.isSuccessful) {
+                    perfilSelecionado.value = response.body()
+                    mostrarDialog.value = true
+                } else {
+                    Log.e("MesaScreen", "Erro ao buscar perfil: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("MesaScreen", "Exceção ao buscar perfil: ${e.message}")
+            }
+        }
+    }
+
+
 
     // WebSocket
     val websocketClient = remember(mesaId) {
@@ -226,8 +258,31 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                 faseDaRodada = faseDaRodada,
                 poteTotal = it.pote_total.toFloat(),
                 maoFormada = maoFormada,
-                apostaAtualMesa = it.aposta_atual.toFloat()
+                apostaAtualMesa = it.aposta_atual.toFloat(),
+                onClickJogador = { jogador ->
+                    Log.d("MK_DEBUG", "👆 Avatar clicado: ${jogador.username} (${jogador.user_id})") // 👈 AQUI
+                    carregarPerfilDoJogador(jogador.user_id)
+                }
             )
         }
+
+        if (mostrarDialog.value && perfilSelecionado.value != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(9999f)
+                    .background(Color.Black.copy(alpha = 0.6f))
+            ) {
+                PerfilDoJogadorDialog(
+                    perfil = perfilSelecionado.value!!,
+                    onDismiss = {
+                        mostrarDialog.value = false
+                        perfilSelecionado.value = null
+                    }
+                )
+            }
+        }
     }
-}
+}///
+
+
