@@ -35,9 +35,14 @@ fun PerfilDoJogadorDialog(
         showFullImage = false
     }
 
-    // Usa fallback com base no nome
-    val avatarUrl = perfil.avatarUrl
-        ?: "https://ui-avatars.com/api/?name=${perfil.nome}&background=FFD700&color=000"
+    // Avatar! Usa fallback com base no nome
+    val avatarCacheBuster = remember(perfil.avatarUrl) { System.currentTimeMillis() }
+    val fallback = "https://i.imgur.com/q0fxp3t.jpeg"
+    val baseUrl = if (perfil.avatarUrl.isNullOrBlank()) fallback else perfil.avatarUrl
+    val avatarUrl = "$baseUrl?t=$avatarCacheBuster"
+    //
+
+
 
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val dialogWidth = (screenWidth * 0.85f).coerceAtMost(380.dp)

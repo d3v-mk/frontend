@@ -14,7 +14,7 @@ fun MainPot(
     faseDaRodada: String?,
     modifier: Modifier = Modifier,
     offsetPercentX: Float = -0.13f,     // ← centralizado
-    offsetPercentY: Float = -0.15f   // ← 18% da tela pra baixo (ajuste livre)
+    offsetPercentY: Float = -0.18f   // ← 18% da tela pra baixo (ajuste livre)
 ) {
     val mostrar = faseDaRodada in listOf("flop", "turn", "river", "showdown")
 

@@ -38,7 +38,7 @@ fun CartasComunitarias(cartas: CartasComunitarias?, context: Context) {
 
             Row(
                 modifier = Modifier
-                    .offset(x = maxWidth * -0.02f), // mexe o conjunto horizontalmente
+                    .offset(x = maxWidth * -0.02f, y = (-7).dp), // mexe o conjunto horizontalmente
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(espacamento)
             ) {

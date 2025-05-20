@@ -26,16 +26,22 @@ import com.panopoker.model.Jogador
 import kotlinx.coroutines.delay
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 
 @Composable
-fun AvatarJogador(jogador: Jogador, onClickJogador: (Jogador) -> Unit) {
+fun AvatarJogador(
+    jogador: Jogador,
+    usuarioLogadoId: Int,
+    onClickJogador: (Jogador) -> Unit
+) {
     val tempoTotal = 20
     var tempoRestante by remember { mutableStateOf(tempoTotal) }
 
+    // contador regressivo (timer visual) no avatar do jogador que está na vez
     LaunchedEffect(jogador.vez) {
         if (jogador.vez) {
             tempoRestante = tempoTotal
@@ -48,11 +54,12 @@ fun AvatarJogador(jogador: Jogador, onClickJogador: (Jogador) -> Unit) {
 
     val progresso = tempoRestante / tempoTotal.toFloat()
 
-    val avatarTimestamp = remember { System.currentTimeMillis() }
-    val finalAvatarUrl = jogador.avatarUrl?.let {
-        "$it?v=$avatarTimestamp"
-    } ?: "https://i.imgur.com/q0fxp3t.jpeg"
-
+    /// atualiza o cache do coil pra mostrar o avatar novo + fallback
+    val avatarTimestamp = remember(jogador.avatarUrl) { System.currentTimeMillis() }
+    val fallback = "https://i.imgur.com/q0fxp3t.jpeg"
+    val baseUrl = jogador.avatarUrl?.takeIf { it.isNotBlank() } ?: fallback
+    val finalAvatarUrl = "$baseUrl?v=$avatarTimestamp"
+    ///
 
     BoxWithConstraints(
         modifier = Modifier.zIndex(1f)
@@ -67,7 +74,13 @@ fun AvatarJogador(jogador: Jogador, onClickJogador: (Jogador) -> Unit) {
         val paddingVertical = maxWidth * 0.003f
         val dealerSize = maxWidth * 0.016f // 👈 ajusta conforme tela
 
+        val deslocamento = maxHeight * 0.01f //
+
+        val fontSizeCla = (maxWidth.value * 0.012f).sp
+
         Column(
+            modifier = Modifier
+                .offset(y = if (jogador.user_id != usuarioLogadoId) (-15).dp else 0.dp), // <<
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
@@ -90,69 +103,101 @@ fun AvatarJogador(jogador: Jogador, onClickJogador: (Jogador) -> Unit) {
                         .shadow(6.dp, CircleShape)
                         .clickable { onClickJogador(jogador) }
                 )
+
+                // 👇 Overlay escuro se foldado
+                if (jogador.foldado == true) {
+                    Box(
+                        modifier = Modifier
+                            .size(imageSize)
+                            .align(Alignment.Center)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.5f)), // Escurece
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "FOLD",
+                            color = Color.Red,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = (imageSize.value * 0.12f).sp
+                        )
+                    }
+                }
             }
 
-            // ✅ NOME + SALDO + FICHA + BLINDS TUDO JUNTO AQUI
-            Box(
-                modifier = Modifier
-                    .background(Color(0xFF555555), RoundedCornerShape(6.dp))
-                    .padding(horizontal = paddingHorizontal, vertical = paddingVertical)
+            // ✅ CLÃ + NOME + SALDO + FICHA + BLINDS
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.offset(y = -deslocamento)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+//                Text(
+//                    text = "🔥 Team BRAVO 🔥",
+//                    color = Color(0xFFFFD700),
+//                    fontSize = fontSizeCla,
+//                    fontWeight = FontWeight.SemiBold
+//                )
+
+                // ✅ Fundo agora só aqui!
+                Box(
+                    modifier = Modifier
+                        .background(Color(0xFF555555), RoundedCornerShape(6.dp))
+                        .padding(horizontal = paddingHorizontal, vertical = paddingVertical)
                 ) {
-                    Text(
-                        jogador.username,
-                        color = Color.White,
-                        fontSize = fontSizeNome.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Image(
-                        painter = painterResource(id = R.drawable.ficha_poker),
-                        contentDescription = null,
-                        modifier = Modifier.size(iconSize)
-                    )
-
-                    Text(
-                        "%.2f".format(jogador.saldo_atual),
-                        color = Color(0xFFFFD700),
-                        fontSize = fontSizeSaldo.sp
-                    )
-
-                    if (jogador.is_sb) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         Text(
-                            "SB",
-                            color = Color.Cyan,
-                            fontSize = fontSizeBlind.sp,
+                            jogador.username,
+                            color = Color.White,
+                            fontSize = fontSizeNome.sp,
                             fontWeight = FontWeight.Bold
                         )
-                    }
 
-                    if (jogador.is_bb) {
-                        Text(
-                            "BB",
-                            color = Color.Magenta,
-                            fontSize = fontSizeBlind.sp,
-                            fontWeight = FontWeight.Bold
+                        Image(
+                            painter = painterResource(id = R.drawable.ficha_poker),
+                            contentDescription = null,
+                            modifier = Modifier.size(iconSize)
                         )
-                    }
 
+                        Text(
+                            "%.2f".format(jogador.saldo_atual),
+                            color = Color(0xFFFFD700),
+                            fontSize = fontSizeSaldo.sp
+                        )
 
-                    if (jogador.is_dealer) {
-                        Box(
-                            modifier = Modifier
-                                .size(dealerSize)
-                                .background(Color.White, shape = CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        if (jogador.is_sb) {
                             Text(
-                                text = "D",
-                                color = Color.Black,
-                                fontSize = (dealerSize.value * 0.6f).sp,
+                                "SB",
+                                color = Color.Cyan,
+                                fontSize = fontSizeBlind.sp,
                                 fontWeight = FontWeight.Bold
                             )
+                        }
+
+                        if (jogador.is_bb) {
+                            Text(
+                                "BB",
+                                color = Color.Magenta,
+                                fontSize = fontSizeBlind.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        if (jogador.is_dealer) {
+                            Box(
+                                modifier = Modifier
+                                    .size(dealerSize)
+                                    .background(Color.White, shape = CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "D",
+                                    color = Color.Black,
+                                    fontSize = (dealerSize.value * 0.6f).sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }

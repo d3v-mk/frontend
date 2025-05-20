@@ -52,30 +52,30 @@ fun AvataresNaMesa(
             0.5f to 0.82f,
             0.21f to 0.74f,
             0.21f to 0.20f,
-            0.5f to 0.15f,
+            0.5f to 0.19f,
             0.77f to 0.20f,
             0.77f to 0.74f
         )
 
         val fichaPositions = listOf(
-            0.5f to 0.644f,
-            0.21f to 0.56f,
-            0.21f to 0.39f,
-            0.5f to 0.33f,
-            0.77f to 0.38f,
-            0.77f to 0.56f
+            0.5f to 0.62f,
+            0.21f to 0.50f,
+            0.21f to 0.355f,
+            0.5f to 0.34f,
+            0.77f to 0.355f,
+            0.77f to 0.50f
         )
 
         val cartaPositions = listOf(
             0.5f to 0.90f,
-            0.45f to 0.5f,
-            0.45f to 0.5f,
-            0.45f to 0.5f,
-            0.45f to 0.5f,
-            0.45f to 0.5f
+            0.465f to 0.48f,
+            0.465f to 0.48f,
+            0.465f to 0.48f,
+            0.465f to 0.48f,
+            0.465f to 0.48f
         )
 
-        val tamanhoCarta = largura * 0.046f
+        val tamanhoCarta = if (mostrarShowdown) largura * 0.05f else largura * 0.022f
 
 
         seats.forEachIndexed { seatIndex, jogadorOriginal ->
@@ -100,6 +100,7 @@ fun AvataresNaMesa(
                 ) {
                     AvatarJogador(
                         jogador = jogador,
+                        usuarioLogadoId = usuarioLogadoId,
                         onClickJogador = onClickJogador
                     )
 
