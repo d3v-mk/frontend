@@ -18,6 +18,7 @@ import androidx.navigation.NavController
 import com.panopoker.data.network.RetrofitInstance
 import com.panopoker.data.service.MesaService
 import com.panopoker.data.session.SessionManager
+import com.panopoker.model.CartaGlowInfo
 import com.panopoker.model.CartasComunitarias
 import com.panopoker.model.Jogador
 import com.panopoker.model.MesaDto
@@ -64,8 +65,8 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     val perfilSelecionado = remember { mutableStateOf<PerfilResponse?>(null) }
 
 
-    var cartasGlowComunitarias by remember { mutableStateOf<List<String>>(emptyList()) }
-    var cartasGlowDoJogador by remember { mutableStateOf<Map<Int, List<String>>>(emptyMap()) }
+    var cartasGlowComunitarias by remember { mutableStateOf<List<CartaGlowInfo>>(emptyList()) }
+    var cartasGlowDoJogador by remember { mutableStateOf<Map<Int, List<CartaGlowInfo>>>(emptyMap()) }
 
 
 
@@ -166,7 +167,8 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             onNovaFase = { estado, novasCartas ->
                 Log.d("WS", "🌊 Nova fase: $estado")
 
-                if (estado != "showdown") {
+                if (estado == "pre-flop") {
+                    // 🎉 Nova rodada: limpar brilhos antigos!
                     cartasGlowComunitarias = emptyList()
                     cartasGlowDoJogador = emptyMap()
                 }
@@ -177,9 +179,19 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
 
             onShowdown = { json ->
                 val showdown = processarShowdown(json)
-                cartasGlowComunitarias = showdown.cartas_vencedoras_comunitarias
-                cartasGlowDoJogador = showdown.cartas_vencedoras_jogador.mapKeys { it.key.toInt() }
                 showdownInfo = showdown
+
+                // Glow para TODOS jogadores vencedores
+                cartasGlowDoJogador = showdown.showdown
+                    .filter { showdown.vencedores.contains(it.jogador_id) }
+                    .associate { it.jogador_id to it.cartas_utilizadas.map { c -> CartaGlowInfo(c.carta, c.indice) } }
+
+                cartasGlowComunitarias = showdown.showdown
+                    .filter { showdown.vencedores.contains(it.jogador_id) }
+                    .flatMap { it.cartas_utilizadas }
+                    .filter { it.origem == "mesa" }
+                    .map { CartaGlowInfo(it.carta, it.indice) }
+                    .distinct()
             }
         )
     }
@@ -227,7 +239,7 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             CartasComunitarias(
                 cartas = cartas,
                 context = context,
-                cartasBrilhando = cartasGlowComunitarias
+                cartasGlow = if (faseDaRodada == "showdown") cartasGlowComunitarias else emptyList()
             )
         }
 
@@ -237,7 +249,8 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             showdownInfo?.let { info ->
                 VencedoresShowdown(
                     vencedores = info.vencedores,
-                    maoFormada = info.mao_formada
+                    jogadores = jogadores,
+                    showdown = info.showdown // <-- lista de jogadores com descrições!
                 )
             }
         }
@@ -293,7 +306,7 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             CartasDoJogador(
                 cartas = minhasCartas,
                 context = context,
-                cartasBrilhando = cartasGlowDoJogador[userIdToken] ?: emptyList()
+                cartasGlow = if (faseDaRodada == "showdown") cartasGlowDoJogador[userIdToken] ?: emptyList() else emptyList()
             )
         }
 

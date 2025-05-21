@@ -17,6 +17,7 @@ import com.panopoker.ui.utils.getCartaDrawable
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.unit.dp
+import com.panopoker.model.CartaGlowInfo
 import com.panopoker.ui.utils.glowEffect
 
 
@@ -25,7 +26,7 @@ import com.panopoker.ui.utils.glowEffect
 fun CartasComunitarias(
     cartas: CartasComunitarias?,
     context: Context,
-    cartasBrilhando: List<String> = emptyList()
+    cartasGlow: List<CartaGlowInfo> = emptyList()
 ) {
     cartas?.let {
         val todas = mutableListOf<String>()
@@ -48,10 +49,10 @@ fun CartasComunitarias(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(espacamento)
             ) {
-                todas.forEach { carta ->
+                todas.forEachIndexed { idx, carta ->
                     val id = getCartaDrawable(context, carta)
 
-                    val isVencedora = cartasBrilhando.contains(carta)
+                    val isVencedora = cartasGlow.any { it.carta == carta && it.indice == idx }
 
                     Box(
                         modifier = Modifier

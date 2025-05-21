@@ -16,6 +16,7 @@ import com.panopoker.R
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import com.panopoker.model.CartaGlowInfo
 
 @Composable
 fun AvataresNaMesa(
@@ -25,7 +26,7 @@ fun AvataresNaMesa(
     faseDaRodada: String?,
     poteTotal: Float,
     apostaAtualMesa: Float,
-    cartasGlowDoJogador: Map<Int, List<String>>,
+    cartasGlowDoJogador: Map<Int, List<CartaGlowInfo>>,
     onClickJogador: (Jogador) -> Unit,
     maoFormada: String
 ) {
@@ -163,7 +164,8 @@ fun AvataresNaMesa(
                                     )
                                 else R.drawable.carta_back
 
-                                val deveBrilhar = carta in (cartasGlowDoJogador[jogador.user_id] ?: emptyList())
+                                val deveBrilhar = cartasGlowDoJogador[jogador.user_id]?.any { it.carta == carta && it.indice == index } == true
+
 
                                 CartaComAnimacaoFlip(
                                     frenteResId = resId,

@@ -13,31 +13,46 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import com.panopoker.model.Jogador
+import com.panopoker.model.JogadorShowdownDto
 
 @Composable
 fun VencedoresShowdown(
-    vencedores: List<String>,
-    maoFormada: String,
+    vencedores: List<Int>,
+    showdown: List<JogadorShowdownDto>,
+    jogadores: List<Jogador>,
     modifier: Modifier = Modifier
 ) {
-    val texto = "🏆 ${vencedores.joinToString()} | $maoFormada"
-
-
     BoxWithConstraints(
         modifier = modifier.fillMaxSize()
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 10.dp, bottom = 6.dp),
-            contentAlignment = Alignment.BottomStart
+                .fillMaxWidth()
+                .padding(start = 10.dp, bottom = 12.dp, top = 8.dp, end = 10.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xCC222222))
+                .padding(12.dp),
+            horizontalAlignment = Alignment.Start
         ) {
             Text(
-                text = texto,
+                text = "🏆 Vencedor(es):",
                 color = Color.Yellow,
-                fontSize = 18.sp
+                fontSize = 20.sp
             )
+            vencedores.forEach { vencedorId ->
+                val jogadorShowdown = showdown.find { it.jogador_id == vencedorId }
+                jogadorShowdown?.let { jShow ->
+                    val jogadorMesa = jogadores.find { it.user_id == jShow.jogador_id }
+                    val nome = jogadorMesa?.username ?: "Jogador ${jShow.jogador_id}"
+                    Text(
+                        text = "$nome: ${jShow.descricao_mao}",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
         }
-
     }
 }

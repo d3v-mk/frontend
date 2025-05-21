@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import com.panopoker.ui.utils.getCartaDrawable
 import com.panopoker.ui.utils.glowEffect
 import androidx.compose.runtime.key
+import com.panopoker.model.CartaGlowInfo
 
 
 @Composable
@@ -26,7 +27,7 @@ fun CartasDoJogador(
     cartas: List<String>,
     context: Context,
     modifier: Modifier = Modifier,
-    cartasBrilhando: List<String> = emptyList()
+    cartasGlow: List<CartaGlowInfo> = emptyList(),
 ) {
     if (cartas.isNotEmpty()) {
         BoxWithConstraints(
@@ -50,7 +51,7 @@ fun CartasDoJogador(
                     // chave única: carta + índice
                     key(carta + "_$idx") {
                         val id = getCartaDrawable(context, carta)
-                        val isVencedora = carta in cartasBrilhando
+                        val isVencedora = cartasGlow.any { it.carta == carta && it.indice == idx }
 
                         Box(
                             modifier = Modifier
