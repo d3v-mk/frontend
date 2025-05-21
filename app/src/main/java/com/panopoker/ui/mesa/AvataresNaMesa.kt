@@ -25,6 +25,7 @@ fun AvataresNaMesa(
     faseDaRodada: String?,
     poteTotal: Float,
     apostaAtualMesa: Float,
+    cartasGlowDoJogador: Map<Int, List<String>>,
     onClickJogador: (Jogador) -> Unit,
     maoFormada: String
 ) {
@@ -32,6 +33,7 @@ fun AvataresNaMesa(
     val mostrarTurn = faseDaRodada.equals("turn", ignoreCase = true)
     val mostrarRiver = faseDaRodada.equals("river", ignoreCase = true)
     val mostrarShowdown = faseDaRodada.equals("showdown", ignoreCase = true)
+
 
     val totalSeats = 6
     val seats: List<Jogador?> = (0 until totalSeats).map { seatIdx ->
@@ -93,6 +95,8 @@ fun AvataresNaMesa(
                 val isVez = jogadorDaVezId == jogadorOriginal.user_id
                 val jogador = jogadorOriginal.copy(vez = isVez)
 
+
+
                 Box(
                     modifier = Modifier
                         .offset(x = avatarOffset.first, y = avatarOffset.second)
@@ -142,6 +146,7 @@ fun AvataresNaMesa(
                         val deveRevelar = mostrarShowdown && jogador.cartas.size == 2 && jogador.participando_da_rodada == true
                         val cartas = if (deveRevelar) jogador.cartas else listOf("placeholder1", "placeholder2")
 
+
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(espacamento),
                             modifier = Modifier
@@ -158,11 +163,14 @@ fun AvataresNaMesa(
                                     )
                                 else R.drawable.carta_back
 
+                                val deveBrilhar = carta in (cartasGlowDoJogador[jogador.user_id] ?: emptyList())
+
                                 CartaComAnimacaoFlip(
                                     frenteResId = resId,
                                     delayMs = jogador.posicao_cadeira * 800 + index * 600,
                                     startTrigger = deveRevelar,
-                                    tamanho = tamanhoCarta
+                                    tamanho = tamanhoCarta,
+                                    brilhar = deveBrilhar
                                 )
                             }
                         }
@@ -170,10 +178,5 @@ fun AvataresNaMesa(
                 }
             }
         }
-
-        CartasDoJogador(
-            minhasCartas = jogadores.find { it.user_id == usuarioLogadoId }?.cartas ?: emptyList(),
-            context = context
-        )
     }
 }

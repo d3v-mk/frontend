@@ -17,10 +17,16 @@ import com.panopoker.ui.utils.getCartaDrawable
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.unit.dp
+import com.panopoker.ui.utils.glowEffect
+
 
 
 @Composable
-fun CartasComunitarias(cartas: CartasComunitarias?, context: Context) {
+fun CartasComunitarias(
+    cartas: CartasComunitarias?,
+    context: Context,
+    cartasBrilhando: List<String> = emptyList()
+) {
     cartas?.let {
         val todas = mutableListOf<String>()
 
@@ -45,12 +51,19 @@ fun CartasComunitarias(cartas: CartasComunitarias?, context: Context) {
                 todas.forEach { carta ->
                     val id = getCartaDrawable(context, carta)
 
+                    val isVencedora = cartasBrilhando.contains(carta)
+
                     Box(
                         modifier = Modifier
                             .width(cartaLargura)
                             .aspectRatio(0.68f)
                             .background(Color.White, RoundedCornerShape(6.dp))
-                            .border(1.dp, Color.Black, RoundedCornerShape(6.dp))
+                            .border(
+                                width = if (isVencedora) 2.dp else 1.dp,
+                                color = if (isVencedora) Color.Yellow else Color.Black,
+                                shape = RoundedCornerShape(6.dp)
+                            )
+                            .then(if (isVencedora) Modifier.glowEffect() else Modifier)  // vamos criar isso
                     ) {
                         Image(
                             painter = painterResource(id),

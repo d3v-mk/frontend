@@ -30,6 +30,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.panopoker.ui.mesa.components.PerfilDoJogadorDialog
+import com.panopoker.ui.utils.processarShowdown
 
 @Composable
 fun MesaScreen(mesaId: Int, navController: NavController? = null) {
@@ -62,6 +63,9 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     val mostrarDialog = remember { mutableStateOf(false) }
     val perfilSelecionado = remember { mutableStateOf<PerfilResponse?>(null) }
 
+
+    var cartasGlowComunitarias by remember { mutableStateOf<List<String>>(emptyList()) }
+    var cartasGlowDoJogador by remember { mutableStateOf<Map<Int, List<String>>>(emptyMap()) }
 
 
 
@@ -161,14 +165,22 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
 
             onNovaFase = { estado, novasCartas ->
                 Log.d("WS", "🌊 Nova fase: $estado")
+
+                if (estado != "showdown") {
+                    cartasGlowComunitarias = emptyList()
+                    cartasGlowDoJogador = emptyMap()
+                }
+
                 estadoRodada = estado
                 cartasComunitarias = cartasComunitarias + novasCartas
             },
 
             onShowdown = { json ->
-                Log.d("MesaScreen", "👑 Dados do showdown: $json")
-                // aqui você pode setar um estado com os vencedores e mostrar as cartas de todos
-            }//<3!!!
+                val showdown = processarShowdown(json)
+                cartasGlowComunitarias = showdown.cartas_vencedoras_comunitarias
+                cartasGlowDoJogador = showdown.cartas_vencedoras_jogador.mapKeys { it.key.toInt() }
+                showdownInfo = showdown
+            }
         )
     }
 
@@ -210,10 +222,15 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             BotaoSair(context, mesaId, accessToken, coroutineScope)
         }
 
-        // Cartas comunitárias
+        // Cartas comunitárias com animação de brilho nas vencedoras
         Box(modifier = Modifier.align(Alignment.Center)) {
-            CartasComunitarias(cartas = cartas, context = context)
+            CartasComunitarias(
+                cartas = cartas,
+                context = context,
+                cartasBrilhando = cartasGlowComunitarias
+            )
         }
+
 
         // Vencedores do showdown
         if (faseDaRodada == "showdown") {
@@ -258,6 +275,7 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                 faseDaRodada = faseDaRodada,
                 poteTotal = it.pote_total.toFloat(),
                 maoFormada = maoFormada,
+                cartasGlowDoJogador = cartasGlowDoJogador,
                 apostaAtualMesa = it.aposta_atual.toFloat(),
                 onClickJogador = { jogador ->
                     Log.d("MK_DEBUG", "👆 Avatar clicado: ${jogador.username} (${jogador.user_id})") // 👈 AQUI
@@ -266,6 +284,20 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
             )
         }
 
+        // Cartas do jogador logado
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .zIndex(100f) // Bem acima de todo o resto
+        ) {
+            CartasDoJogador(
+                cartas = minhasCartas,
+                context = context,
+                cartasBrilhando = cartasGlowDoJogador[userIdToken] ?: emptyList()
+            )
+        }
+
+        // mostrar dialog
         if (mostrarDialog.value && perfilSelecionado.value != null) {
             Box(
                 modifier = Modifier
