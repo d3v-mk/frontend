@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.zIndex
 import com.panopoker.model.Jogador
 import com.panopoker.model.JogadorShowdownDto
 
@@ -24,21 +25,21 @@ fun VencedoresShowdown(
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomStart // balão no canto inferior esquerdo
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 10.dp, bottom = 12.dp, top = 8.dp, end = 10.dp)
+                .padding(start = 10.dp, bottom = 12.dp) // Padding na esquerda e embaixo
                 .clip(RoundedCornerShape(16.dp))
                 .background(Color(0xCC222222))
                 .padding(12.dp),
-            horizontalAlignment = Alignment.Start
+            horizontalAlignment = Alignment.CenterHorizontally // Tudo centralizado no balão
         ) {
             Text(
-                text = "🏆 Vencedor(es):",
-                color = Color.Yellow,
-                fontSize = 20.sp
+                text = "🏆 Vencedor(es)",
+                color = Color.Green,
+                fontSize = 10.sp
             )
             vencedores.forEach { vencedorId ->
                 val jogadorShowdown = showdown.find { it.jogador_id == vencedorId }
@@ -48,7 +49,7 @@ fun VencedoresShowdown(
                     Text(
                         text = "$nome: ${jShow.descricao_mao}",
                         color = Color.White,
-                        fontSize = 18.sp,
+                        fontSize = 10.sp,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }

@@ -36,6 +36,20 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.alpha
+import com.google.accompanist.flowlayout.FlowRow
+
+
+data class Conquista(
+    val nome: String,
+    val emoji: String,
+    val descricao: String,
+    val desbloqueada: Boolean
+)
 
 @Composable
 fun PerfilScreen(navController: NavController) {
@@ -98,7 +112,7 @@ fun PerfilScreen(navController: NavController) {
     }
 
     perfil?.let { user ->
-        val baseUrl = "http://192.168.0.9:8000"
+        val baseUrl = "http://192.168.0.9:8000" //
         val avatarRaw = user.avatarUrl ?: ""
         val finalAvatarUrl = if (avatarRaw.startsWith("http")) {
             "$avatarRaw?t=${avatarUrlCacheBuster.value}"
@@ -108,6 +122,25 @@ fun PerfilScreen(navController: NavController) {
 
         Log.d("PANO_DEBUG", "Avatar recebido do backend: ${user.avatarUrl}")
         Log.d("PANO_DEBUG", "URL FINAL usada no AsyncImage: $finalAvatarUrl")
+
+
+        val conquistas = listOf(
+            Conquista("Royal Flush", "👑", "Faça um Royal Flush!", user.royal_flushes > 0),
+            Conquista("Straight Flush", "👺", "Faça um Straight Flush!", user.straight_flushes > 0),
+            Conquista("Top 1", "🏆", "Fique em 1º no ranking!", user.vezes_no_top1 > 0),
+            Conquista("Campeão", "🥇", "Fique em 1º no torneio!", user.vezes_no_top1 > 0),
+            Conquista("Tubarão", "🦈", "Total de 500 fichas ganhas", user.straight_flushes > 0), // Exemplo
+            Conquista("Baleia", "🐋", "Total de 1000 fichas ganhas", user.straight_flushes > 0), // Exemplo
+            Conquista("Honey Pot", "🍯", "Ganhe um pote de 100", user.straight_flushes > 0), // Exemplo
+            Conquista("Honey Honey Pot", "🐝", "Ganhe um pote de 500", user.straight_flushes > 0), // Exemplo
+            Conquista("Promotor", "🤵🏻‍♂️", "Parabéns, você é promotor do Pano!", user.is_promoter) // Exemplo
+        )
+
+        val conquistasDesbloqueadas = conquistas.filter { it.desbloqueada }
+        val temConquista = conquistasDesbloqueadas.isNotEmpty()
+
+        var showDialog by remember { mutableStateOf(false) }
+
 
         Column(
             modifier = Modifier
@@ -124,28 +157,63 @@ fun PerfilScreen(navController: NavController) {
                     .size(130.dp)
                     .shadow(10.dp, CircleShape)
                     .clip(CircleShape)
-                    .border(2.dp, Color.Yellow, CircleShape)
+                    .border(2.dp, Color.Green, CircleShape)
             )
 
             TextButton(onClick = { launcher.launch("image/*") }) {
                 Text("Alterar Avatar", color = Color.Yellow, fontSize = 14.sp)
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = { showDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF232323)),
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Text("Ver todas conquistas", color = Color(0xFFFFD700))
+            }
 
-            Text(text = user.nome, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFFFD700))
-            Text(text = "ID: ${user.id_publico}", fontSize = 14.sp, color = Color.LightGray, fontFamily = FontFamily.Monospace)
+            Divider(
+                color = Color(0xFF363636),
+                thickness = 1.dp,
+                modifier = Modifier.padding(vertical = 14.dp)
+            )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "\uD83C\uDF1F Conquistas",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (user.royal_flushes > 0) {
-                    AssistChip(onClick = {}, label = { Text("\uD83D\uDC51 Royal Flush") }, colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF3A3A3A)))
-                }
-                if (user.vezes_no_top1 > 0) {
-                    AssistChip(onClick = {}, label = { Text("\uD83C\uDFC6 Top 1 Ranking") }, colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2E2E2E)))
+            // Chips das conquistas, tudo em uma Row horizontal e scrollável caso queira mais conquistas futuramente
+            FlowRow(
+                mainAxisSpacing = 10.dp,
+                crossAxisSpacing = 8.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp)
+            ) {
+                if (temConquista) {
+                    conquistasDesbloqueadas.forEach { c ->
+                        AssistChip(
+                            onClick = {}, // Pode abrir tooltip ou não fazer nada
+                            label = { Text("${c.emoji} ${c.nome}") },
+                            colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFF2C2C2C))
+                        )
+                    }
+                } else {
+                    Text(
+                        "Sem conquistas ainda 😕",
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.CenterHorizontally)
+                    )
                 }
             }
+
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -156,15 +224,15 @@ fun PerfilScreen(navController: NavController) {
                 "Rodadas ganhas" to user.rodadas_ganhas,
                 "Rodadas jogadas" to user.rodadas_jogadas,
                 "Win Rate" to if (user.rodadas_jogadas > 0) "${(user.rodadas_ganhas * 100 / user.rodadas_jogadas)}%" else "0%",
+                "Fichas ganhas" to "%.2f".format(user.fichas_ganhas),
+                "Maior pote ganho" to "%.2f".format(user.maior_pote),
+                "Torneios vencidos" to user.torneios_vencidos,
                 "Sequências" to user.sequencias,
                 "Flushes" to user.flushes,
                 "Full Houses" to user.full_houses,
                 "Quadras" to user.quadras,
                 "Straight Flushes" to user.straight_flushes,
                 "Royal Flushes" to user.royal_flushes,
-                "Torneios vencidos" to user.torneios_vencidos,
-                "Maior pote ganho" to "R$ %.2f".format(user.maior_pote),
-                "Fichas ganhas" to "R$ %.2f".format(user.fichas_ganhas),
                 //"Fichas perdidas" to "R$ %.2f".format(user.fichas_perdidas)
                 //"Mão favorita" to (user.mao_favorita ?: "—")
             )
@@ -194,17 +262,119 @@ fun PerfilScreen(navController: NavController) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = { navController.navigate("ranking_mensal") },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Yellow)
-            ) {
-                Icon(Icons.Default.Star, contentDescription = null, tint = Color.Black)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Ver Ranking Mensal", color = Color.Black, fontWeight = FontWeight.Bold)
+            /// dialoag para abrir todas as conquistas
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    confirmButton = {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Button(
+                                onClick = { showDialog = false },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)),
+                                shape = RoundedCornerShape(30)
+                            ) {
+                                Text("Fechar", color = Color.Black, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    },
+                    title = {
+                        Column {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp)
+                                    .background(Color(0xFFFFD700), shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+                            )
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 10.dp, bottom = 4.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "\uD83C\uDF1F ",
+                                    fontSize = 24.sp,
+                                    modifier = Modifier.padding(end = 4.dp)
+                                )
+                                Text(
+                                    "Conquistas",
+                                    fontSize = 19.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFFFD700)
+                                )
+                            }
+                        }
+                    },
+                    text = {
+                        Column(
+                            Modifier
+                                .verticalScroll(rememberScrollState())
+                                .background(Color(0xFF181818), shape = RoundedCornerShape(12.dp))
+                                .padding(4.dp)
+                        ) {
+                            conquistas.forEachIndexed { idx, c ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp, horizontal = 4.dp)
+                                        .alpha(if (c.desbloqueada) 1f else 0.4f)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .background(
+                                                if (c.desbloqueada) Color(0xFF232323) else Color(0xFF262626),
+                                                shape = CircleShape
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = c.emoji,
+                                            fontSize = 22.sp
+                                        )
+                                    }
+                                    Spacer(Modifier.width(12.dp))
+                                    Column {
+                                        Text(
+                                            text = c.nome,
+                                            fontWeight = if (c.desbloqueada) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (c.desbloqueada) Color(0xFFFFD700) else Color.Gray,
+                                            fontSize = 15.sp
+                                        )
+                                        Text(
+                                            text = c.descricao,
+                                            fontSize = 12.sp,
+                                            color = if (c.desbloqueada) Color.White else Color.LightGray,
+                                            maxLines = 3
+                                        )
+                                    }
+                                }
+                                if (idx < conquistas.lastIndex) {
+                                    Divider(
+                                        color = Color(0xFF222222),
+                                        thickness = 1.dp,
+                                        modifier = Modifier.padding(vertical = 2.dp, horizontal = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    containerColor = Color(0xFF232323),
+                    shape = RoundedCornerShape(18.dp)
+                )
             }
+
+
         }
+
     } ?: run {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = Color.Yellow)

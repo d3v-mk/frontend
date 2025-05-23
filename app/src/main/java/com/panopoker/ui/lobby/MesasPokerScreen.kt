@@ -26,9 +26,12 @@ import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.launch
 
 @Composable
-fun MesasPokerScreen(navController: NavController) {
+fun MesasPokerScreen(
+    navController: NavController,
+    ) {
     val context = LocalContext.current
     val token = SessionManager.getToken(context)
+    val session = remember { SessionManager(context) }
     var nomeUsuario by remember { mutableStateOf("Jogador") }
     var idPublico by remember { mutableStateOf("") }
     var erroMatch by remember { mutableStateOf<String?>(null) }
@@ -38,7 +41,11 @@ fun MesasPokerScreen(navController: NavController) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
+    var saldoUsuario by remember { mutableStateOf(0.0f) }
+
     LaunchedEffect(Unit) {
+        saldoUsuario = session.fetchUserBalance()
+
         if (!token.isNullOrBlank()) {
             try {
                 val response = com.panopoker.data.network.RetrofitInstance.usuarioApi.getPerfil("Bearer $token")
@@ -61,6 +68,7 @@ fun MesasPokerScreen(navController: NavController) {
         scope = scope,
         nomeUsuario = nomeUsuario,
         idPublico = idPublico,
+        saldoUsuario = saldoUsuario,
         avatarUrl = avatarUrl,
         navController = navController
     ) {

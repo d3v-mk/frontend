@@ -43,6 +43,9 @@ android {
 
 dependencies {
 
+    implementation("com.google.accompanist:accompanist-flowlayout:0.30.1")
+    implementation ("androidx.compose.foundation:foundation:1.5.0") // ou superior
+
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     implementation("io.coil-kt:coil-compose:2.5.0") // ou versão atual

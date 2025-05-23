@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,7 +26,25 @@ import com.panopoker.data.network.RetrofitInstance
 import com.panopoker.data.session.SessionManager
 import com.panopoker.ui.components.BotaoHamburguer
 import com.panopoker.ui.components.MenuLateralCompleto
+import com.panopoker.ui.lobby.components.NewsMarquee
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+
+
+
+@Composable
+fun BotaoHamburguer(drawerState: DrawerState, scope: CoroutineScope, modifier: Modifier = Modifier) {
+    IconButton(
+        onClick = { scope.launch { drawerState.open() } },
+        modifier = modifier // <-- AQUI
+    ) {
+        Icon(
+            imageVector = Icons.Default.Menu,
+            contentDescription = "Abrir menu",
+            tint = Color.White
+        )
+    }
+}
 
 @Composable
 fun LobbyScreen(navController: NavController) {
@@ -37,6 +57,16 @@ fun LobbyScreen(navController: NavController) {
     var idPublico by remember { mutableStateOf("") }
     var avatarUrl by remember { mutableStateOf<String?>(null) }
     var saldoUsuario by remember { mutableStateOf(0.0f) }
+
+
+    val noticiasMock = listOf(
+        "Bem-vindo ao PanoPoker, Lenda!",
+        "Siga o Pano no instagram: @panopoker",
+        "Muka ganhou R$300 com Full House!",
+        "Participe do torneio diário e ganhe prêmios!",
+        "Nova atualização: Avatares animados liberados!",
+        "Promoção: Deposite R$50 e ganhe +10% em fichas!"
+    )
 
     LaunchedEffect(Unit) {
         saldoUsuario = session.fetchUserBalance()
@@ -63,6 +93,7 @@ fun LobbyScreen(navController: NavController) {
         nomeUsuario = nomeUsuario,
         idPublico = idPublico,
         avatarUrl = avatarUrl,
+        saldoUsuario = saldoUsuario,
         navController = navController
     ) {
         Column(
@@ -72,27 +103,25 @@ fun LobbyScreen(navController: NavController) {
                 .padding(16.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(36.dp)
+                    .padding(bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ficha_poker),
-                    contentDescription = "Ficha PanoPoker",
-                    modifier = Modifier.size(30.dp),
-                    contentScale = ContentScale.Crop
+                NewsMarquee(
+                    mensagens = noticiasMock,
+                    modifier = Modifier.weight(1f) // <-- SÓ WEIGHT
                 )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = "PanoFichas: ${"%.2f".format(saldoUsuario)}",
-                    fontSize = 24.sp,
-                    color = Color(0xFFFFC300)
+                Spacer(modifier = Modifier.width(10.dp))
+                BotaoHamburguer(
+                    drawerState = drawerState,
+                    scope = scope,
+                    modifier = Modifier.size(36.dp)
                 )
-
-                BotaoHamburguer(drawerState, scope)
             }
+
+
 
             Spacer(modifier = Modifier.height(16.dp))
 

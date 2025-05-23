@@ -2,8 +2,10 @@ package com.panopoker.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -12,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +49,7 @@ fun MenuLateralCompleto(
     nomeUsuario: String,
     idPublico: String?,
     avatarUrl: String?,
+    saldoUsuario: Float,
     navController: NavController,
     conteudo: @Composable () -> Unit
 ) {
@@ -59,62 +63,126 @@ fun MenuLateralCompleto(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(top = 24.dp, start = 16.dp, end = 16.dp, bottom = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Surface(
-                        shape = RoundedCornerShape(100),
-                        color = Color.Gray,
-                        modifier = Modifier.size(100.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(96.dp)
+                            .border(width = 3.dp, color = Color.Green, shape = CircleShape) // borda verde fina
+                            .background(Color(0xFF323232), shape = CircleShape), // fundo escuro interno
+                        contentAlignment = Alignment.Center
                     ) {
                         val avatarPainter = if (!avatarUrl.isNullOrBlank()) {
                             rememberAsyncImagePainter(avatarUrl + "?nocache=${System.currentTimeMillis()}")
                         } else {
                             painterResource(id = R.drawable.avatar_default)
                         }
-
                         Image(
                             painter = avatarPainter,
                             contentDescription = "Avatar do jogador",
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier
+                                .size(84.dp)
+                                .clip(CircleShape)
+                                .background(Color.Gray, shape = CircleShape)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // Nome + status badge
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = nomeUsuario,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .background(Color.Green, shape = RoundedCornerShape(50))
+                        )
+
+                    }
+
                     Text(
-                        text = nomeUsuario,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFFD700)
+                        text = "Status: (em breve)",
+                        fontSize = 15.sp,
+                        color = Color(0xFFFFE082),
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(top = 2.dp, bottom = 4.dp)
                     )
 
                     Text(
                         text = "ID: ${idPublico ?: "Carregando..."}",
-                        fontSize = 14.sp,
-                        color = Color.LightGray
+                        fontSize = 13.sp,
+                        color = Color.LightGray,
+                        modifier = Modifier.padding(top = 2.dp)
                     )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF232323),
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .padding(horizontal = 20.dp, vertical = 10.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.ficha_poker),
+                                contentDescription = "Ficha PanoPoker",
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = " ${"%.2f".format(saldoUsuario)}",
+                                fontSize = 18.sp,
+                                color = Color(0xFFFFC300),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Divider()
 
-                DrawerItem("Perfil") {
+                DrawerItem("Perfil \uD83D\uDC64") {
                     scope.launch {
                         drawerState.close()
                         navController.navigate("perfil")
                     }
                 }
 
-                DrawerItem("Promotores") {
+                DrawerItem("Amigos 👥") { /* implementar depois */ }
+
+                DrawerItem("Equipe 🔥") { /* implementar depois */ }
+
+                DrawerItem("Promotores \uD83E\uDD1D") {
                     scope.launch {
                         drawerState.close()
                         navController.navigate("promotores")
                     }
                 }
 
-                DrawerItem("Configurações") { /* implementar depois */ }
-                DrawerItem("Sair") { /* implementar depois */ }
+                DrawerItem("Rank 🏆") { /* implementar depois */ }
+                DrawerItem("Sair \uD83D\uDEAA") { /* implementar depois */ }
             }
         },
         content = { conteudo() }
