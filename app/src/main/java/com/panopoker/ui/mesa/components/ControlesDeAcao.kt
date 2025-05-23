@@ -21,9 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.panopoker.R
 
 import androidx.compose.ui.graphics.TransformOrigin
-
-
-
+import com.panopoker.network.WebSocketClient
 
 
 @Composable
@@ -39,7 +37,7 @@ fun ControlesDeAcao(
     onSliderChange: (Float) -> Unit,
     onMostrarSlider: () -> Unit,
     onEsconderSlider: () -> Unit,
-    onRefresh: () -> Unit
+    webSocketClient: WebSocketClient,
 ) {
     val jogadorAtual = jogadores.find { it.user_id == userIdToken }
     val sliderMax = jogadorAtual?.saldo_atual?.coerceAtLeast(0.01f) ?: 0.01f
@@ -49,20 +47,6 @@ fun ControlesDeAcao(
     val corBotao = if (textoAcao == "Check") Color.Gray else Color.Green
     val raiseLimpo = "%.2f".format(raiseValue.coerceIn(0.01f, sliderMax)).replace(",", ".").toFloat()
 
-
-    val context = LocalContext.current
-
-    fun tocarSom(resId: Int) {
-        try {
-            val mediaPlayer = MediaPlayer.create(context, resId)
-            mediaPlayer.setOnCompletionListener {
-                it.release()
-            }
-            mediaPlayer.start()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
 
 
     if (mostrarSlider) {
@@ -133,19 +117,13 @@ fun ControlesDeAcao(
                     onClick = {
                         coroutineScope.launch {
                             try {
-                                val service = RetrofitInstance.retrofit.create(MesaService::class.java)
-
-                                val response = if (raiseValue >= sliderMax) {
-                                    service.allInJWT(mesaId, "Bearer $accessToken")
+                                if (raiseValue >= sliderMax) {
+                                    webSocketClient.enviarAllin()
                                 } else {
-                                    service.raiseJWT(mesaId, raiseLimpo, "Bearer $accessToken")
+                                    webSocketClient.enviarRaise(raiseLimpo)
                                 }
-
-                                if (response.isSuccessful) {
-                                    onEsconderSlider()
-                                    delay(100)
-                                    //onRefresh()
-                                }
+                                onEsconderSlider()
+                                delay(100)
                             } catch (_: Exception) {}
                         }
                     },
@@ -181,7 +159,6 @@ fun ControlesDeAcao(
                                 val resp = service.revelarCartas(mesaId, "Bearer $accessToken")
                                 if (resp.isSuccessful) {
                                     delay(200)
-                                    //onRefresh()
                                 }
                             } catch (_: Exception) {}
                         }
@@ -204,9 +181,8 @@ fun ControlesDeAcao(
                     coroutineScope.launch {
                         try {
                             RetrofitInstance.retrofit.create(MesaService::class.java)
-                                .foldJWT(mesaId, "Bearer $accessToken")
+                                webSocketClient.enviarFold()
                             delay(500)
-                            //onRefresh()
                         } catch (_: Exception) {}
                     }
                 },
@@ -223,12 +199,11 @@ fun ControlesDeAcao(
                         try {
                             val service = RetrofitInstance.retrofit.create(MesaService::class.java)
                             if (textoAcao == "Call") {
-                                service.callJWT(mesaId, "Bearer $accessToken")
+                                webSocketClient.enviarCall()
                             } else {
-                                service.checkJWT(mesaId, "Bearer $accessToken")
+                                webSocketClient.enviarCheck()
                             }
                             delay(500)
-                            //onRefresh()
                         } catch (_: Exception) {}
                     }
                 },

@@ -1,7 +1,6 @@
 package com.panopoker.ui.mesa
 
 import android.app.Activity
-import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
@@ -14,18 +13,19 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
 import com.panopoker.ui.theme.PanopokerTheme
 import com.panopoker.data.session.SessionManager
-import com.panopoker.data.network.RetrofitInstance
-import com.panopoker.data.service.MesaService
+import com.panopoker.network.WebSocketClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class MesaActivity : ComponentActivity() {
     private var mesaId: Int = -1
+    private lateinit var webSocketClient: WebSocketClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Notch/Recorte de tela no modo fullscreen
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             window.attributes.layoutInDisplayCutoutMode =
                 android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
@@ -34,29 +34,30 @@ class MesaActivity : ComponentActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         mesaId = intent.getIntExtra("mesa_id", -1)
 
-        // Botão voltar
+        // Pega o token do usuário
+        val session = SessionManager(this)
+        val token = session.fetchAuthToken() ?: ""
+
+
+        // Botão voltar (back) – agora é full WS!
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                val session = SessionManager(this@MesaActivity)
-                val token = session.fetchAuthToken() ?: ""
-
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        RetrofitInstance.retrofit
-                            .create(MesaService::class.java)
-                            .sairDaMesa(mesaId, "Bearer $token")
-                    } catch (_: Exception) {
-                        // Ignora erros
-                    } finally {
-                        finish()
-                    }
+                        webSocketClient.sairDaMesa()
+                        // delay(200) // Se quiser dar um delay antes de fechar
+                    } catch (_: Exception) {}
+                    finish()
                 }
             }
         })
 
         setContent {
             PanopokerTheme {
-                MesaScreen(mesaId = mesaId, navController = null)
+                MesaScreen(
+                    mesaId = mesaId,
+                    navController = null // ou passe o navController se usar
+                )
 
                 // Fullscreen após montar o conteúdo
                 LaunchedEffect(Unit) {
@@ -79,5 +80,9 @@ class MesaActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 }

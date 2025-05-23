@@ -23,6 +23,7 @@ import com.panopoker.ui.components.BotaoHamburguer
 import com.panopoker.ui.components.MenuLateralCompleto
 import com.panopoker.R
 import androidx.compose.ui.text.font.FontWeight
+import com.panopoker.network.WebSocketClient
 import kotlinx.coroutines.launch
 
 @Composable
@@ -36,7 +37,6 @@ fun MesasPokerScreen(
     var idPublico by remember { mutableStateOf("") }
     var erroMatch by remember { mutableStateOf<String?>(null) }
     var avatarUrl by remember { mutableStateOf<String?>(null) }
-
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -105,46 +105,32 @@ fun MesasPokerScreen(
                     else -> R.drawable.mesasouro_card
                 }
 
-                val matchFunction = when (tipo) {
-                    "bronze" -> com.panopoker.data.network.RetrofitInstance.mesaService::buscarMatchBronze
-                    "prata" -> com.panopoker.data.network.RetrofitInstance.mesaService::buscarMatchPrata
-                    else -> com.panopoker.data.network.RetrofitInstance.mesaService::buscarMatchOuro
-                }
-
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                         .clickable {
-                            scope.launch {
-                                try {
-                                    val response = matchFunction("Bearer $token")
-                                    if (response.isSuccessful) {
-                                        val mesaId = response.body()?.id
-                                        if (mesaId != null) {
-                                            val entrar = com.panopoker.data.network.RetrofitInstance.mesaService.entrarNaMesa(mesaId, "Bearer $token")
-                                            if (entrar.isSuccessful) {
-                                                val intent = Intent(context, com.panopoker.ui.mesa.MesaActivity::class.java)
-                                                intent.putExtra("mesa_id", mesaId)
-                                                context.startActivity(intent)
-                                            } else {
-                                                erroMatch = "Erro ao entrar na mesa."
-                                            }
-                                        } else {
-                                            erroMatch = "Nenhuma mesa disponível."
-                                        }
-                                    } else {
-                                        erroMatch = "Nenhuma mesa disponível."
-                                    }
-                                } catch (e: Exception) {
-                                    erroMatch = "Erro ao buscar mesa."
-                                }
-                            }
+                            erroMatch = null
+                            var matchWs: WebSocketClient? = null
+                            matchWs = WebSocketClient(
+                                mesaId = 0,
+                                token = token ?: "",
+                                tipoMatch = tipo, // bronze, prata, ouro
+                                onMatchEncontrado = { mesaId ->
+                                    matchWs?.disconnect()
+                                    val intent = Intent(context, com.panopoker.ui.mesa.MesaActivity::class.java)
+                                    intent.putExtra("mesa_id", mesaId)
+                                    context.startActivity(intent)
+                                },
+                                onMesaAtualizada = {}
+                            )
+                            matchWs.connect()
                         },
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
                     border = BorderStroke(2.dp, Color(0xFFFFC300))
                 ) {
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()

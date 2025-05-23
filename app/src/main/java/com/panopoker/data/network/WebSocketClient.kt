@@ -8,9 +8,12 @@ class WebSocketClient(
     private val mesaId: Int,
     private val onRevelarCartas: (jogadorId: Int) -> Unit = {},
     private val onMesaAtualizada: () -> Unit = {},
+    private val token: String,
     private val onNovaFase: (estado: String, novasCartas: List<String>) -> Unit = { _, _ -> },
-    private val onShowdown: (JSONObject) -> Unit = {}
+    private val onShowdown: (JSONObject) -> Unit = {},
+    private val onMatchEncontrado: (mesaId: Int) -> Unit = {},
 
+    private val tipoMatch: String = ""
 ) {
     private val client = OkHttpClient()
     private lateinit var webSocket: WebSocket
@@ -21,7 +24,31 @@ class WebSocketClient(
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
+            override fun onOpen(ws: WebSocket, response: Response) {
+                // 1) manda o auth
+                val auth = JSONObject().apply {
+                    put("type","auth"); put("token",token)
+                }
+                ws.send(auth.toString())
+                Log.d("WS","🔒 auth enviado")
+
+                // 2) se for matchmaking já manda o match, senão, se for mesa real, entra nela:
+                if (tipoMatch.isNotEmpty()) {
+                    val m = JSONObject().apply {
+                        put("action","matchmaking"); put("tipo",tipoMatch)
+                    }
+                    ws.send(m.toString())
+                    Log.d("WS","🎯 matchmaking enviado")
+                } else if (mesaId != 0) {
+                    val entrar = JSONObject().put("action","entrar")
+                    ws.send(entrar.toString())
+                    Log.d("WS","✅ entrar na mesa enviado")
+                }
+            }
+
+
             override fun onMessage(webSocket: WebSocket, text: String) {
+                Log.d("WS_RECEBIDO", text) // <-- Adiciona isso!
                 try {
                     val json = JSONObject(text)
 
@@ -36,6 +63,14 @@ class WebSocketClient(
                             Log.d("WS", "🔁 Recebido evento: mesa_atualizada")
                             onMesaAtualizada()
                         }
+
+                        "match_encontrado" -> {
+                            val mesaId = json.getInt("mesa_id")
+                            Log.d("WS", "🎯 Matchmaking encontrou mesa: $mesaId")
+                            // Chama callback ou navega direto
+                            onMatchEncontrado(mesaId)
+                        }
+
                         "fase_avancada" -> {
                             val estado = json.optString("estado_rodada")
                             val novasCartasJson = json.optJSONArray("novas_cartas")
@@ -48,6 +83,7 @@ class WebSocketClient(
                             Log.d("WS", "📥 Nova fase: $estado com cartas $cartas")
                             onNovaFase(estado, cartas)
                         }
+
                         "showdown" -> {
                             val dados = json.optJSONObject("dados")
                             if (dados != null) {
@@ -62,13 +98,29 @@ class WebSocketClient(
                             onMesaAtualizada()
                         }
                     }
-
                 } catch (e: Exception) {
                     Log.e("WS", "Erro ao processar mensagem: ${e.message}")
                 }
             }
         })
     }
+
+    // ---- Envio universal de ações WS! ----
+    fun enviarAcao(acao: String, valor: Any? = null) {
+        val msg = JSONObject()
+        msg.put("action", acao)
+        if (valor != null) msg.put("valor", valor)
+        Log.d("WS", "Enviando $acao pelo WS")
+        webSocket.send(msg.toString())
+    }
+
+    // Atalhos de ação poker (pra usar fácil no UI)
+    fun enviarCall()  = enviarAcao("call")
+    fun enviarCheck() = enviarAcao("check")
+    fun enviarFold()  = enviarAcao("fold")
+    fun enviarAllin() = enviarAcao("allin")
+    fun enviarRaise(valor: Number) = enviarAcao("raise", valor)
+    fun sairDaMesa() = enviarAcao("sair")
 
     fun disconnect() {
         if (::webSocket.isInitialized) {

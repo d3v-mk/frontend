@@ -34,7 +34,10 @@ import com.panopoker.ui.mesa.components.PerfilDoJogadorDialog
 import com.panopoker.ui.utils.processarShowdown
 
 @Composable
-fun MesaScreen(mesaId: Int, navController: NavController? = null) {
+fun MesaScreen(
+    mesaId: Int,
+    navController: NavController? = null,
+) {
     val context = LocalContext.current
     val session = remember { SessionManager(context) }
     val accessToken = session.fetchAuthToken() ?: ""
@@ -60,7 +63,6 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     var estadoRodada by remember { mutableStateOf("") }
 
     // jogador dialog
-    var jogadorSelecionado by remember { mutableStateOf<Jogador?>(null) }
     val mostrarDialog = remember { mutableStateOf(false) }
     val perfilSelecionado = remember { mutableStateOf<PerfilResponse?>(null) }
 
@@ -149,9 +151,10 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
 
 
     // WebSocket
-    val websocketClient = remember(mesaId) {
+    val webSocketClient = remember(mesaId, accessToken) {
         WebSocketClient(
             mesaId = mesaId,
+            token = accessToken,
             onRevelarCartas = { jogadorId ->
                 jogadores = jogadores.map { jogador ->
                     if (jogador.user_id == jogadorId) jogador.copy(participando_da_rodada = true)
@@ -197,26 +200,17 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
     }
 
 
-    LaunchedEffect(Unit) {
-        websocketClient.connect()
-        refreshMesa() // 👈 isso resolve o "avatar não aparece quando entra sozinho"
+    LaunchedEffect(mesaId) {
+        webSocketClient.connect()
     }
 
     DisposableEffect(Unit) {
         onDispose {
-            websocketClient.disconnect()
+            webSocketClient.disconnect()
         }
     }
 
-    // Loop de atualização
-//    LaunchedEffect(Unit) {
-//        refreshMesa()
-//        delay(500)
-//        while (true) {
-//            refreshMesa()
-//            delay(2000)
-//        }
-//    }
+
 
     // Layout principal da mesa
     Box(
@@ -231,7 +225,7 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
 
         // Botão de sair
         Box(modifier = Modifier.align(Alignment.TopStart)) {
-            BotaoSair(context, mesaId, accessToken, coroutineScope)
+            BotaoSair(context, webSocketClient, coroutineScope)
         }
 
         // Cartas comunitárias com animação de brilho nas vencedoras
@@ -275,7 +269,7 @@ fun MesaScreen(mesaId: Int, navController: NavController? = null) {
                 onSliderChange = { raiseValue = it },
                 onMostrarSlider = { mostrarSlider = true },
                 onEsconderSlider = { mostrarSlider = false },
-                onRefresh = { refreshMesa() }
+                webSocketClient = webSocketClient,
             )
         }
 

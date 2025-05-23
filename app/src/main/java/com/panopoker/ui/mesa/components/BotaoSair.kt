@@ -14,13 +14,13 @@ import kotlinx.coroutines.launch
 import com.panopoker.data.network.RetrofitInstance
 import com.panopoker.data.service.MesaService
 import androidx.compose.foundation.layout.*
+import com.panopoker.network.WebSocketClient
 
 
 @Composable
 fun BotaoSair(
     context: Context,
-    mesaId: Int,
-    accessToken: String,
+    webSocketClient: WebSocketClient,
     coroutineScope: CoroutineScope
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -28,12 +28,12 @@ fun BotaoSair(
             onClick = {
                 coroutineScope.launch {
                     try {
-                        val service = RetrofitInstance.retrofit.create(MesaService::class.java)
-                        val response = service.sairDaMesa(mesaId, "Bearer $accessToken")
-                        if (response.isSuccessful) (context as? Activity)?.finish()
+                        webSocketClient.sairDaMesa()
+                        (context as? Activity)?.finish()
                     } catch (_: Exception) {}
                 }
             },
+
             colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
             modifier = Modifier
                 .align(Alignment.TopStart)

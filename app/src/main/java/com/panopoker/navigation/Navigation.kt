@@ -11,9 +11,6 @@ import com.panopoker.ui.lobby.LobbyScreen
 import com.panopoker.ui.lobby.MesasPokerScreen
 import com.panopoker.ui.mesa.MesaScreen
 import com.panopoker.ui.splash.SplashScreen
-import com.panopoker.ui.lobby.MesasBronzeScreen
-import com.panopoker.ui.lobby.MesasOuroScreen
-import com.panopoker.ui.lobby.MesasPrataScreen
 import com.panopoker.ui.perfil.PerfilScreen
 import com.panopoker.ui.financas.PromotoresScreen
 
@@ -59,18 +56,6 @@ fun PanoPokerNav() {
 
         composable("mesas_poker") {
             MesasPokerScreen(navController)
-        }
-
-        composable("mesas_bronze") {
-            MesasBronzeScreen(navController)
-        }
-
-        composable("mesas_prata") {
-            MesasPrataScreen()
-        }
-
-        composable("mesas_ouro") {
-            MesasOuroScreen()
         }
 
         composable("promotores") {
