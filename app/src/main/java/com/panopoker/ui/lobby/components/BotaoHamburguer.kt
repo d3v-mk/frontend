@@ -174,15 +174,15 @@ fun MenuLateralCompleto(
 
                 DrawerItem("Equipe 🔥") { /* implementar depois */ }
 
+                DrawerItem("Rank 🏆") { /* implementar depois */ }
+                DrawerItem("Meu VIP 💎") { /* implementar depois */ }
+
                 DrawerItem("Promotores \uD83E\uDD1D") {
                     scope.launch {
                         drawerState.close()
                         navController.navigate("promotores")
                     }
                 }
-
-                DrawerItem("Rank 🏆") { /* implementar depois */ }
-                DrawerItem("Sair \uD83D\uDEAA") { /* implementar depois */ }
             }
         },
         content = { conteudo() }

@@ -3,6 +3,7 @@ package com.panopoker.ui.mesa
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -79,6 +80,9 @@ fun MesaScreen(
 
     var lastJogadorDaVezId by remember { mutableStateOf<Int?>(null) }
 
+    var showSemFichasDialog by remember { mutableStateOf(false) }
+
+
 
 
 
@@ -125,6 +129,17 @@ fun MesaScreen(
                 mesa = mesaBody
                 faseDaRodada = mesaBody?.estado_da_rodada
                 jogadorDaVezId = mesaBody?.jogador_da_vez
+
+                // (??? nfunfa) 🧹 Se a mesa estiver "aberta", limpa todos os rastros da rodada anterior
+                if (mesaBody?.status == "aberta") {
+                    Log.d("WS", "🧼 Limpando mesa (status: aberta)")
+                    cartasComunitarias = emptyList()
+                    cartas = null
+                    showdownInfo = null
+                    estadoRodada = ""
+                    cartasGlowComunitarias = emptyList()
+                    cartasGlowDoJogador = emptyMap()
+                }
 
                 // AGORA SIM, faz as verificações!
                 Log.d("MK_DEBUG", "Mesa atualizada! rodada_id: ${mesaBody?.rodada_id}, last: $lastRodadaId")
@@ -213,6 +228,12 @@ fun MesaScreen(
                 }
             },
 
+            // 🆕 Novo callback:
+            onRemovidoSemSaldo = {
+                //showSemFichasDialog = true
+
+            },
+
             onMesaAtualizada = {
                 Log.d("WS", "🌀 Atualizando mesa via WebSocket")
                 refreshMesa()
@@ -249,6 +270,8 @@ fun MesaScreen(
             }
         )
     }
+
+
 
 
     LaunchedEffect(mesaId) {
@@ -289,16 +312,24 @@ fun MesaScreen(
         }
 
 
-        // Vencedores do showdown
+        // Vencedores do showdown // pode ta bugando isso ver depois (OK!!!)
         if (faseDaRodada == "showdown") {
-            showdownInfo?.let { info ->
+            val info = showdownInfo                  // pode ser null
+            val listaShowdown = info?.showdown       // lista pode ser null
+
+            // só entra aqui se listaShowdown != null E tiver elementos
+            if (listaShowdown != null && listaShowdown.isNotEmpty()) {
                 VencedoresShowdown(
-                    vencedores = info.vencedores,
-                    jogadores = jogadores,
-                    showdown = info.showdown // <-- lista de jogadores com descrições!
+                    vencedores = info.vencedores,     // info agora é não-null
+                    jogadores  = jogadores,
+                    showdown   = listaShowdown       // listaShowdown é definitivamente não-null
                 )
             }
         }
+
+
+
+
 
         // Fichas do pote
         MainPot(

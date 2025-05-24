@@ -80,6 +80,8 @@ fun LobbyScreen(navController: NavController) {
             }
         }
 
+
+        //polling dos ends noticias
         while (true) {
             try {
                 // Notícias normais: pega só a mais recente (primeira da lista)
@@ -113,7 +115,7 @@ fun LobbyScreen(navController: NavController) {
             } catch (e: Exception) {
                 Log.e("LobbyScreen", "erro ao buscar notícias", e)
             }
-            delay(10_000)
+            delay(25_000)
         }
     }
 

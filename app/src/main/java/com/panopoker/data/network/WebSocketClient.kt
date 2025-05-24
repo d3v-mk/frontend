@@ -12,8 +12,10 @@ class WebSocketClient(
     private val onNovaFase: (estado: String, novasCartas: List<String>) -> Unit = { _, _ -> },
     private val onShowdown: (JSONObject) -> Unit = {},
     private val onMatchEncontrado: (mesaId: Int) -> Unit = {},
+    private val onRemovidoSemSaldo: () -> Unit = {},
 
     private val tipoMatch: String = ""
+
 ) {
     private val client = OkHttpClient()
     private lateinit var webSocket: WebSocket
@@ -56,6 +58,12 @@ class WebSocketClient(
                         val jogadorId = json.getInt("jogador_id")
                         Log.d("WS", "🎯 Revelação recebida de $jogadorId")
                         onRevelarCartas(jogadorId)
+                    }
+
+                    if (json.optString("type") == "removido_sem_saldo") {
+                        Log.d("WS", "🚪 Jogador foi removido por saldo zerado")
+                        onRemovidoSemSaldo()
+                        return // 👈 evita processar mais coisa desnecessária
                     }
 
                     when (json.optString("evento")) {
