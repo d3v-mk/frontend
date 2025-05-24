@@ -128,12 +128,17 @@ fun PerfilScreen(navController: NavController) {
             Conquista("Royal Flush", "👑", "Faça um Royal Flush!", user.royal_flushes > 0),
             Conquista("Straight Flush", "👺", "Faça um Straight Flush!", user.straight_flushes > 0),
             Conquista("Top 1", "🏆", "Fique em 1º no ranking!", user.vezes_no_top1 > 0),
-            Conquista("Campeão", "🥇", "Fique em 1º no torneio!", user.vezes_no_top1 > 0),
-            Conquista("Tubarão", "🦈", "Total de 500 fichas ganhas", user.straight_flushes > 0), // Exemplo
-            Conquista("Baleia", "🐋", "Total de 1000 fichas ganhas", user.straight_flushes > 0), // Exemplo
-            Conquista("Honey Pot", "🍯", "Ganhe um pote de 100", user.straight_flushes > 0), // Exemplo
-            Conquista("Honey Honey Pot", "🐝", "Ganhe um pote de 500", user.straight_flushes > 0), // Exemplo
-            Conquista("Promotor", "🤵🏻‍♂️", "Parabéns, você é promotor do Pano!", user.is_promoter) // Exemplo
+            Conquista("Campeão", "🥇", "Fique em 1º no torneio!", user.vezes_no_top1 > 999999), //arrumar(qnd tiver torneio)
+            Conquista("Peixe", "🐟", "Total de 150 fichas ganhas", user.fichas_ganhas > 150),
+            Conquista("Tubarão", "🦈", "Total de 500 fichas ganhas", user.fichas_ganhas > 500),
+            Conquista("Baleia", "🐋", "Total de 1000 fichas ganhas", user.fichas_ganhas > 1000),
+            Conquista("Honey Pot", "🍯", "Ganhe um pote de 100", user.maior_pote > 100),
+            Conquista("Honey Honey Pot", "🐝", "Ganhe um pote de 500", user.maior_pote > 500),
+            Conquista("Promotor", "🤵🏻‍♂️", "Parabéns, você é promotor do Pano!", user.is_promoter), //
+            Conquista("Beta Tester", "️🎉", "Participou da versão Beta do Pano!", user.is_promoter), //
+            Conquista("1 ano de serviço", "️1️⃣", "Joga desde {data}", user.is_promoter) //
+
+
         )
 
         val conquistasDesbloqueadas = conquistas.filter { it.desbloqueada }

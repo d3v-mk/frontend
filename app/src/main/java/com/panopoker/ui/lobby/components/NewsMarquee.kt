@@ -1,7 +1,6 @@
 package com.panopoker.ui.lobby.components
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.horizontalScroll
@@ -23,20 +22,30 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import kotlin.math.roundToInt
 
 @Composable
 fun NewsMarquee(
-    mensagens: List<String>,
+    adminMsg: String,
+    latestEvent: String,
     modifier: Modifier = Modifier,
     corTexto: Color = Color(0xFFFFC300)
 ) {
+    val defaultMsg = "🔥 Bem-vindo ao PanoPoker, Lenda! insta: @panopoker 🔥"
+    val fixedAdmin = adminMsg.takeIf { it.isNotBlank() } ?: defaultMsg
+    val fixedEvent = latestEvent.takeIf { it.isNotBlank() } ?: defaultMsg
+    val lista      = listOf(fixedAdmin, fixedEvent)
+
     var idx by remember { mutableStateOf(0) }
     var textWidth by remember { mutableStateOf(0f) }
     var boxWidth by remember { mutableStateOf(0f) }
     var readyToShow by remember { mutableStateOf(false) }
-    val scrollState = rememberScrollState()
     val density = LocalDensity.current
+
+    // recria scrollState zerado sempre que mudar de mensagem
+    val scrollState = remember(idx) { ScrollState(0) }
+
+    // voltar ao primeiro ao trocar lista
+    LaunchedEffect(lista) { idx = 0 }
 
     Box(
         modifier = modifier
@@ -55,7 +64,7 @@ fun NewsMarquee(
         ) {
             Spacer(Modifier.width(with(density) { boxWidth.toDp() }))
             Text(
-                text = mensagens[idx],
+                text = lista[idx],
                 fontSize = 16.sp,
                 color = corTexto,
                 fontWeight = FontWeight.Bold,
@@ -65,45 +74,33 @@ fun NewsMarquee(
             )
             Spacer(Modifier.width(with(density) { boxWidth.toDp() }))
         }
-    }///
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            // 1) reset e espera layout
-            readyToShow = false
-            snapshotFlow { boxWidth }.filter { it > 0f }.first()
-            scrollState.scrollTo(0)
-
-            // 2) espera o texto medido e mostra
-            snapshotFlow { textWidth }.filter { it > 0f }.first()
-            readyToShow = true
-
-            // 3) pega total de scroll = maxValue
-            val total = snapshotFlow { scrollState.maxValue }
-                .filter { it > 0 }
-                .first()
-                .toFloat()
-
-            // 4) anima ~60fps
-            val duration = 9_000L
-            val frame    = 16L
-            val steps    = (duration / frame).toInt().coerceAtLeast(1)
-            val delta    = total / steps
-
-            repeat(steps) {
-                scrollState.scrollBy(delta)
-                delay(frame)
-            }
-
-            // 5) corrige o arredondamento: joga o resto que sobrou
-            val scrolled = delta * steps
-            val remainder = total - scrolled
-            if (remainder > 0f) scrollState.scrollBy(remainder)
-
-            // 6) pausa e troca mensagem
-            //delay(10)
-            idx = (idx + 1) % mensagens.size
-        }
     }
 
-}/////
+    LaunchedEffect(idx, boxWidth, textWidth) {
+        readyToShow = false
+
+        // aguarda medida
+        snapshotFlow { boxWidth }.filter { it > 0f }.first()
+        snapshotFlow { textWidth }.filter { it > 0f }.first()
+
+        // agora mostra e anima
+        readyToShow = true
+        val total = scrollState.maxValue.toFloat()
+        val duration = 9_000L
+        val frame = 16L
+        val steps = (duration / frame).toInt().coerceAtLeast(1)
+        val delta = total / steps
+
+        repeat(steps) {
+            scrollState.scrollBy(delta)
+            delay(frame)
+        }
+        // corrige sobras
+        val remainder = total - delta * steps
+        if (remainder > 0f) scrollState.scrollBy(remainder)
+
+        // antes de trocar, dá um pause
+        delay(1_000)
+        idx = (idx + 1) % lista.size
+    }
+}

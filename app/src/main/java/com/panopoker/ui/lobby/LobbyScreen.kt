@@ -1,5 +1,6 @@
 package com.panopoker.ui.lobby
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,20 +24,19 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.panopoker.R
 import com.panopoker.data.network.RetrofitInstance
+import com.panopoker.data.service.LobbyService
 import com.panopoker.data.session.SessionManager
-import com.panopoker.ui.components.BotaoHamburguer
 import com.panopoker.ui.components.MenuLateralCompleto
 import com.panopoker.ui.lobby.components.NewsMarquee
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-
-
+import kotlinx.coroutines.delay
 
 @Composable
 fun BotaoHamburguer(drawerState: DrawerState, scope: CoroutineScope, modifier: Modifier = Modifier) {
     IconButton(
         onClick = { scope.launch { drawerState.open() } },
-        modifier = modifier // <-- AQUI
+        modifier = modifier
     ) {
         Icon(
             imageVector = Icons.Default.Menu,
@@ -58,15 +58,9 @@ fun LobbyScreen(navController: NavController) {
     var avatarUrl by remember { mutableStateOf<String?>(null) }
     var saldoUsuario by remember { mutableStateOf(0.0f) }
 
-
-    val noticiasMock = listOf(
-        "Bem-vindo ao PanoPoker, Lenda!",
-        "Siga o Pano no instagram: @panopoker",
-        "Muka ganhou R$300 com Full House!",
-        "Participe do torneio diário e ganhe prêmios!",
-        "Nova atualização: Avatares animados liberados!",
-        "Promoção: Deposite R$50 e ganhe +10% em fichas!"
-    )
+    // Listas de mensagens
+    val noticias = remember { mutableStateListOf<String>() }
+    val adminNoticias = remember { mutableStateListOf<String>() }
 
     LaunchedEffect(Unit) {
         saldoUsuario = session.fetchUserBalance()
@@ -85,7 +79,47 @@ fun LobbyScreen(navController: NavController) {
                 e.printStackTrace()
             }
         }
+
+        while (true) {
+            try {
+                // Notícias normais: pega só a mais recente (primeira da lista)
+                val respNews = RetrofitInstance.lobbyService.getNoticias("Bearer $token")
+                if (respNews.isSuccessful) {
+                    val lista = respNews.body() ?: emptyList()
+                    val events = lista.filter { it.tipo != "admin" }
+                        .map { it.mensagem }
+                    val latest = events.firstOrNull()?.let { listOf(it) } ?: emptyList()
+                    noticias.apply {
+                        clear()
+                        addAll(latest)
+                    }
+                } else {
+                    Log.e("LobbyScreen", "news falhou: ${'$'}{respNews.code()} ${'$'}{respNews.errorBody()?.string()}")
+                }
+
+                // Notícias admin: sempre pega a última admin como fixa
+                val respAdmin = RetrofitInstance.lobbyService.getNoticiasAdmin("Bearer $token")
+                if (respAdmin.isSuccessful) {
+                    val adminList = respAdmin.body() ?: emptyList()
+                    val fixed = adminList.firstOrNull()?.mensagem ?: ""
+                    adminNoticias.apply {
+                        clear()
+                        add(fixed)
+                    }
+                } else {
+                    Log.e("LobbyScreen", "adminNews falhou: ${'$'}{respAdmin.code()} ${'$'}{respAdmin.errorBody()?.string()}")
+                }
+
+            } catch (e: Exception) {
+                Log.e("LobbyScreen", "erro ao buscar notícias", e)
+            }
+            delay(10_000)
+        }
     }
+
+    // Valores pra passar pro marquee
+    val adminFixed = adminNoticias.firstOrNull() ?: ""
+    val latestEvent = noticias.toList()
 
     MenuLateralCompleto(
         drawerState = drawerState,
@@ -110,9 +144,12 @@ fun LobbyScreen(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 NewsMarquee(
-                    mensagens = noticiasMock,
-                    modifier = Modifier.weight(1f) // <-- SÓ WEIGHT
+                    adminMsg    = adminFixed,
+                    latestEvent = latestEvent.lastOrNull().orEmpty(),  // ⬅️ aqui: String, não List<String>
+                    modifier    = Modifier.weight(1f)
                 )
+
+
                 Spacer(modifier = Modifier.width(10.dp))
                 BotaoHamburguer(
                     drawerState = drawerState,
@@ -121,8 +158,6 @@ fun LobbyScreen(navController: NavController) {
                 )
             }
 
-
-
             Spacer(modifier = Modifier.height(16.dp))
 
             // Card: Poker
@@ -130,9 +165,7 @@ fun LobbyScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
-                    .clickable {
-                        navController.navigate("mesas_poker")
-                    },
+                    .clickable { navController.navigate("mesas_poker") },
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E)),
                 border = BorderStroke(2.dp, Color(0xFFFFC300))
@@ -181,7 +214,7 @@ fun LobbyScreen(navController: NavController) {
                 }
             }
 
-            // Slots
+            // Slots em breve
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -211,7 +244,7 @@ fun LobbyScreen(navController: NavController) {
                 }
             }
 
-            // Banner
+            // Banner promocional
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -230,4 +263,4 @@ fun LobbyScreen(navController: NavController) {
             }
         }
     }
-}
+}///

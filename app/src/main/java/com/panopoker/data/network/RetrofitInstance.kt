@@ -2,6 +2,7 @@ package com.panopoker.data.network
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.panopoker.data.service.LobbyService
 import com.panopoker.data.service.MesaService
 import com.panopoker.data.service.PromotorService
 import com.panopoker.data.service.UsuarioService
@@ -56,5 +57,9 @@ object RetrofitInstance {
 
     val usuarioApi: UsuarioService by lazy {
         retrofit.create(UsuarioService::class.java)
+    }
+
+    val lobbyService: LobbyService by lazy {
+        retrofit.create(LobbyService::class.java)
     }
 }
