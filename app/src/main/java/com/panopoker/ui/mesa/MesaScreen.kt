@@ -32,6 +32,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.panopoker.ui.mesa.components.PerfilDoJogadorDialog
 import com.panopoker.ui.utils.processarShowdown
+import kotlinx.coroutines.Job
+
 
 @Composable
 fun MesaScreen(
@@ -70,6 +72,16 @@ fun MesaScreen(
     var cartasGlowComunitarias by remember { mutableStateOf<List<CartaGlowInfo>>(emptyList()) }
     var cartasGlowDoJogador by remember { mutableStateOf<Map<Int, List<CartaGlowInfo>>>(emptyMap()) }
 
+    var lastRodadaId by remember { mutableStateOf(-1) }
+
+    var progressoTimer by remember { mutableStateOf(1.0f) }
+    var timerJob by remember { mutableStateOf<Job?>(null) }
+
+    var lastJogadorDaVezId by remember { mutableStateOf<Int?>(null) }
+
+
+
+
 
 
     // Controle de slider
@@ -78,6 +90,24 @@ fun MesaScreen(
             val jogadorAtual = jogadores.find { it.user_id == userIdToken }
             val saldo = jogadorAtual?.saldo_atual ?: 0.01f
             raiseValue = (saldo / 2f).coerceIn(0.01f, saldo)
+        }
+    }
+
+
+    fun resetarTimerJogadorDaVez() {
+        timerJob?.cancel()
+        progressoTimer = 1.0f
+
+        timerJob = coroutineScope.launch {
+            val tempoTotal = 15_500L //
+            val interval = 50L
+            val steps = tempoTotal / interval
+            repeat(steps.toInt()) { step ->
+                delay(interval)
+                progressoTimer = 1.0f - (step + 1) / steps.toFloat()
+            }
+            progressoTimer = 0.0f // Garante zerado no final
+            // Aqui você pode chamar ação de fold automático, etc
         }
     }
 
@@ -90,9 +120,29 @@ fun MesaScreen(
                     service.getMesa(mesaId, "Bearer $accessToken")
                 }
                 val mesaBody = mesaResponse.body()
+
+                // Atualiza states ANTES de checar o timer!
                 mesa = mesaBody
                 faseDaRodada = mesaBody?.estado_da_rodada
                 jogadorDaVezId = mesaBody?.jogador_da_vez
+
+                // AGORA SIM, faz as verificações!
+                Log.d("MK_DEBUG", "Mesa atualizada! rodada_id: ${mesaBody?.rodada_id}, last: $lastRodadaId")
+
+                if (mesaBody != null && mesaBody.rodada_id != lastRodadaId) {
+                    Log.d("WS", "🎯 Nova rodada detectada (refreshMesa)! Resetando timer do jogador da vez.")
+                    resetarTimerJogadorDaVez()
+                    lastRodadaId = mesaBody.rodada_id
+                    lastJogadorDaVezId = mesaBody.jogador_da_vez
+                } else {
+                    // Mudou só o jogador da vez
+                    if (jogadorDaVezId != null && jogadorDaVezId != lastJogadorDaVezId) {
+                        Log.d("TIMER_DEBUG", "Mudou o jogador da vez! Resetando timer.")
+                        resetarTimerJogadorDaVez()
+                        lastJogadorDaVezId = jogadorDaVezId
+                    }
+                }
+
 
                 val respJogadores = withContext(Dispatchers.IO) {
                     service.getJogadoresDaMesa(mesaId, "Bearer $accessToken")
@@ -147,6 +197,7 @@ fun MesaScreen(
             }
         }
     }
+
 
 
 
@@ -282,6 +333,7 @@ fun MesaScreen(
                 faseDaRodada = faseDaRodada,
                 poteTotal = it.pote_total.toFloat(),
                 maoFormada = maoFormada,
+                progressoTimer = progressoTimer,
                 cartasGlowDoJogador = cartasGlowDoJogador,
                 apostaAtualMesa = it.aposta_atual.toFloat(),
                 onClickJogador = { jogador ->

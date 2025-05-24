@@ -22,10 +22,11 @@ import com.panopoker.model.CartaGlowInfo
 fun AvataresNaMesa(
     jogadores: List<Jogador>,
     jogadorDaVezId: Int?,
-    usuarioLogadoId: Int,
     faseDaRodada: String?,
     poteTotal: Float,
     apostaAtualMesa: Float,
+    progressoTimer: Float,
+    usuarioLogadoId: Int,
     cartasGlowDoJogador: Map<Int, List<CartaGlowInfo>>,
     onClickJogador: (Jogador) -> Unit,
     maoFormada: String
@@ -106,6 +107,8 @@ fun AvataresNaMesa(
                     AvatarJogador(
                         jogador = jogador,
                         usuarioLogadoId = usuarioLogadoId,
+                        jogadorDaVezId = jogadorDaVezId ?: -1,
+                        progressoTimer = progressoTimer,
                         onClickJogador = onClickJogador
                     )
 

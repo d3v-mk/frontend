@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.Dp
 fun AvatarJogador(
     jogador: Jogador,
     usuarioLogadoId: Int,
+    jogadorDaVezId: Int,
+    progressoTimer: Float,
     onClickJogador: (Jogador) -> Unit
 ) {
     val tempoTotal = 20
@@ -85,9 +87,10 @@ fun AvatarJogador(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Box(modifier = Modifier.size(avatarBoxSize)) {
-                if (jogador.vez) {
-                    TimerCircular(progresso = progresso, tamanho = avatarBoxSize)
+                if (jogador.user_id == jogadorDaVezId) {
+                    TimerCircular(progresso = progressoTimer, tamanho = avatarBoxSize)
                 }
+
 
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)

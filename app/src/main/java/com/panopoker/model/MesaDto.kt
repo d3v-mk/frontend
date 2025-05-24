@@ -2,6 +2,7 @@ package com.panopoker.model
 
 data class MesaDto(
     val id: Int,
+    val rodada_id: Int,
     val nome: String,
     val buy_in: Double,
     val status: String,
