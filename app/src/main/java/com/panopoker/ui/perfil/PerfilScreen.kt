@@ -135,7 +135,7 @@ fun PerfilScreen(navController: NavController) {
             Conquista("Honey Pot", "🍯", "Ganhe um pote de 100", user.maior_pote > 100),
             Conquista("Honey Honey Pot", "🐝", "Ganhe um pote de 500", user.maior_pote > 500),
             Conquista("Promotor", "🤵🏻‍♂️", "Parabéns, você é promotor do Pano!", user.is_promoter), //
-            Conquista("Beta Tester", "️🎉", "Participou da versão Beta do Pano!", user.is_promoter), //
+            Conquista("Beta Tester", "️🎉", "Participou da versão Beta do Pano!", user.beta_tester > 0), //
             Conquista("1 ano de serviço", "️1️⃣", "Joga desde {data}", user.is_promoter) //
 
 

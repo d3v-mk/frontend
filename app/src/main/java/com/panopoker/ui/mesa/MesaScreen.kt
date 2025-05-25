@@ -299,7 +299,7 @@ fun MesaScreen(
 
         // Botão de sair
         Box(modifier = Modifier.align(Alignment.TopStart)) {
-            BotaoSair(context, webSocketClient, coroutineScope)
+            BotaoHamburguerMesa(context, webSocketClient, coroutineScope)
         }
 
         // Cartas comunitárias com animação de brilho nas vencedoras

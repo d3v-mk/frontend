@@ -25,6 +25,7 @@ data class PerfilResponse(
     @SerializedName("data_primeira_vitoria") val data_primeira_vitoria: String?,
     @SerializedName("data_ultima_vitoria") val data_ultima_vitoria: String?,
     @SerializedName("is_promoter") val is_promoter: Boolean,
-    @SerializedName("ultimo_update") val ultimo_update: String?
+    @SerializedName("ultimo_update") val ultimo_update: String?,
+    @SerializedName("beta_tester") val beta_tester: Int
 )
 
