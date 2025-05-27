@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +7,10 @@ plugins {
 }
 
 android {
+    val keystoreProperties = Properties().apply {
+        load(File(rootProject.rootDir, "keystore.properties").inputStream())
+    }
+
     namespace = "com.panopoker"
     compileSdk = 35
 
@@ -14,8 +20,16 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["KEY_ALIAS"] as String
+            keyPassword = keystoreProperties["KEY_PASSWORD"] as String
+            storeFile = file(keystoreProperties["STORE_FILE"] as String)
+            storePassword = keystoreProperties["STORE_PASSWORD"] as String
+        }
     }
 
     buildTypes {
@@ -25,8 +39,20 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
+
+    // Mágica de renomear o APK
+    android.applicationVariants.all {
+        if (buildType.name == "release") {
+            outputs.all {
+                val outputImpl = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
+                outputImpl?.outputFileName = "PanoPoker-v${versionName}.apk"
+            }
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -38,6 +64,7 @@ android {
         compose = true
     }
 }
+
 
 
 
