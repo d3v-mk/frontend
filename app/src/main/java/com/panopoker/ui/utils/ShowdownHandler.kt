@@ -5,13 +5,17 @@ import org.json.JSONObject
 import com.panopoker.model.ShowdownDto
 import com.panopoker.model.JogadorShowdownDto
 import com.panopoker.model.CartaUtilizadaDto
+import com.panopoker.model.SidePotDto
 
 fun processarShowdown(json: JSONObject): ShowdownDto {
     val mesaId = json.optInt("mesa_id")
+
     val vencedores = json.optJSONArray("vencedores")?.let { arr ->
         List(arr.length()) { arr.getInt(it) }
     } ?: emptyList()
-    val pote = json.optDouble("pote", 0.0).toFloat()
+
+    val pote = json.optDouble("pote", 0.0).toFloat() // <- só vai usar se tiver no ShowdownDto
+
     val showdownList = json.optJSONArray("showdown")?.let { arr ->
         List(arr.length()) { i ->
             val jObj = arr.getJSONObject(i)
@@ -41,10 +45,26 @@ fun processarShowdown(json: JSONObject): ShowdownDto {
         }
     } ?: emptyList()
 
-    return ShowdownDto(
+    val sidePots = json.optJSONArray("side_pots")?.let { arr ->
+        List(arr.length()) { i ->
+            val potObj = arr.getJSONObject(i)
+            SidePotDto(
+                valor = potObj.optDouble("valor", 0.0).toFloat(),
+                jogadores = potObj.optJSONArray("jogadores")?.let { jArr ->
+                    List(jArr.length()) { jArr.getInt(it) }
+                } ?: emptyList()
+            )
+        }
+    } ?: emptyList()
+
+    val showdownDto = ShowdownDto(
         mesa_id = mesaId,
         showdown = showdownList,
         vencedores = vencedores,
-        pote = pote
+        side_pots = sidePots
     )
+
+    Log.d("PROCESSADOR", "🔥 ShowdownDto final: $showdownDto")
+
+    return showdownDto
 }

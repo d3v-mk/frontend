@@ -82,6 +82,10 @@ fun MesaScreen(
 
     var showSemFichasDialog by remember { mutableStateOf(false) }
 
+    var showVencedores by remember { mutableStateOf(false) }
+    var showdownInfoPersistente by remember { mutableStateOf<ShowdownDto?>(null) }
+
+
 
 
 
@@ -256,6 +260,16 @@ fun MesaScreen(
                 val showdown = processarShowdown(json)
                 showdownInfo = showdown
 
+                // Garante persistência do conteúdo + tempo de exibição do balao vencedores
+                showdownInfoPersistente = showdown
+                showVencedores = true
+
+                coroutineScope.launch {
+                    delay(8000) // tempo que quiser exibir
+                    showVencedores = false
+                    showdownInfoPersistente = null // limpa depois se quiser
+                }
+
                 // Glow para TODOS jogadores vencedores
                 cartasGlowDoJogador = showdown.showdown
                     .filter { showdown.vencedores.contains(it.jogador_id) }
@@ -312,20 +326,19 @@ fun MesaScreen(
         }
 
 
-        // Vencedores do showdown // pode ta bugando isso ver depois (OK!!!)
-        if (faseDaRodada == "showdown") {
-            val info = showdownInfo                  // pode ser null
-            val listaShowdown = info?.showdown       // lista pode ser null
-
-            // só entra aqui se listaShowdown != null E tiver elementos
-            if (listaShowdown != null && listaShowdown.isNotEmpty()) {
+        // Vencedores do showdown //
+        if (showVencedores && showdownInfoPersistente != null) {
+            val listaShowdown = showdownInfoPersistente?.showdown
+            if (!listaShowdown.isNullOrEmpty()) {
                 VencedoresShowdown(
-                    vencedores = info.vencedores,     // info agora é não-null
-                    jogadores  = jogadores,
-                    showdown   = listaShowdown       // listaShowdown é definitivamente não-null
+                    vencedores = showdownInfoPersistente!!.vencedores,
+                    jogadores = jogadores,
+                    showdown = listaShowdown
                 )
             }
         }
+
+
 
 
 

@@ -21,8 +21,12 @@ data class ShowdownDto(
     val mesa_id: Int,
     val showdown: List<JogadorShowdownDto>,
     val vencedores: List<Int>,
-    val pote: Float  // 👈 Só manter se backend mandar!
+    val side_pots: List<SidePotDto>
 )
 
+data class SidePotDto(
+    val valor: Float,
+    val jogadores: List<Int>
+)
 
 

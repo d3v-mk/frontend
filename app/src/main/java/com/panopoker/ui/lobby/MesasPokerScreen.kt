@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MesasPokerScreen(
     navController: NavController,
-    ) {
+) {
     val context = LocalContext.current
     val token = SessionManager.getToken(context)
     val session = remember { SessionManager(context) }
@@ -61,7 +61,6 @@ fun MesasPokerScreen(
             }
         }
     }
-
 
     MenuLateralCompleto(
         drawerState = drawerState,
@@ -110,6 +109,17 @@ fun MesasPokerScreen(
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                         .clickable {
+                            val valorMinimo = when (tipo) {
+                                "bronze" -> 0.30f
+                                "prata" -> 2.00f
+                                else -> 10.00f
+                            }
+
+                            if (saldoUsuario < valorMinimo) {
+                                erroMatch = "Saldo insuficiente para entrar em mesas $tipo"
+                                return@clickable
+                            }
+
                             erroMatch = null
                             var matchWs: WebSocketClient? = null
                             matchWs = WebSocketClient(
@@ -122,7 +132,10 @@ fun MesasPokerScreen(
                                     intent.putExtra("mesa_id", mesaId)
                                     context.startActivity(intent)
                                 },
-                                onMesaAtualizada = {}
+                                onMesaAtualizada = {},
+                                onRemovidoSemSaldo = {
+                                    erroMatch = "Você foi removido por saldo insuficiente"
+                                }
                             )
                             matchWs.connect()
                         },
