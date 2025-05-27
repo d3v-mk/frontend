@@ -11,6 +11,8 @@ captures/
 # Config local
 local.properties
 panopoker.keystore
+keystore.properties
+
 
 # Caches do Android Studio
 /.idea/caches/
