@@ -15,7 +15,7 @@ fun loginWithGoogleToken(
     onSuccess: () -> Unit
 ) {
     val retrofit = Retrofit.Builder()
-        .baseUrl("http://192.168.0.9:8000/") // ou 10.0.2.2 no emulador
+        .baseUrl("https://api.panopoker.com/") // IPZADA
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 

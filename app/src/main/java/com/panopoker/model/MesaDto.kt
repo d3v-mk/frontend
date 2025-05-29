@@ -14,6 +14,7 @@ data class MesaDto(
     val big_blind: Double,
     val pote_total: Double,
     val aposta_atual: Double,
-    val cartas_comunitarias: CartasComunitarias
+    val cartas_comunitarias: CartasComunitarias,
+    val vez_timestamp: Long? = null
 )
 

@@ -14,6 +14,8 @@ class WebSocketClient(
     private val onMatchEncontrado: (mesaId: Int) -> Unit = {},
     private val onRemovidoSemSaldo: () -> Unit = {},
 
+    private val onVezAtualizada: (jogadorId: Int, timestamp: Long) -> Unit = { _, _ -> },
+
     private val tipoMatch: String = ""
 
 ) {
@@ -22,7 +24,7 @@ class WebSocketClient(
 
     fun connect() {
         val request = Request.Builder()
-            .url("ws://192.168.0.9:8000/ws/mesa/$mesaId") // 🧠 Ajusta IP se mudar
+            .url("wss://api.panopoker.com/ws/mesa/$mesaId") // IPZADA
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
@@ -90,6 +92,17 @@ class WebSocketClient(
                             }
                             Log.d("WS", "📥 Nova fase: $estado com cartas $cartas")
                             onNovaFase(estado, cartas)
+                        }
+
+                        "vez_atualizada" -> {
+                            val jogadorId = json.optInt("jogador_id", -1)
+                            val timestampInicio = json.optLong("vez_timestamp", System.currentTimeMillis())
+
+                            Log.d("WS", "🎯 vez_atualizada | jogadorId=$jogadorId | ts=$timestampInicio")
+
+                            if (jogadorId != -1) {
+                                onVezAtualizada(jogadorId, timestampInicio)
+                            }
                         }
 
                         "showdown" -> {

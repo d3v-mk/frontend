@@ -87,6 +87,13 @@ fun MesaScreen(
 
 
 
+    val momentoRecebido = System.currentTimeMillis()
+    var timestampRecebidoLocalmente by remember { mutableLongStateOf(0L) }
+
+
+
+
+
 
 
 
@@ -102,22 +109,56 @@ fun MesaScreen(
     }
 
 
-    fun resetarTimerJogadorDaVez() {
+    fun resetarTimerJogadorDaVez(timestampServidor: Long) {
+        Log.d("TIMER_DEBUG", "🔁 resetarTimerJogadorDaVez chamado com timestamp: $timestampServidor")
+
         timerJob?.cancel()
         progressoTimer = 1.0f
 
+        val agora = System.currentTimeMillis()
+        timestampRecebidoLocalmente = agora
+
+        Log.d("TIMER_DEBUG", "⏱️ Agora: $agora")
+        Log.d("TIMER_DEBUG", "📦 timestampRecebidoLocalmente atualizado: $timestampRecebidoLocalmente")
+
+        val tempoPassadoDesdeServidor = agora - timestampServidor
+        val duracaoTurno = 20_000L
+        val tempoRealRestante = duracaoTurno - tempoPassadoDesdeServidor
+
+        Log.d("TIMER_DEBUG", "⏳ Tempo real restante para o turno: $tempoRealRestante ms")
+
+        if (tempoRealRestante <= 0) {
+            Log.d("TIMER_DEBUG", "⚠️ Tempo já expirou. Não iniciando o timer.")
+            progressoTimer = 0.0f
+            return
+        }
+
         timerJob = coroutineScope.launch {
-            val tempoTotal = 15_500L //
             val interval = 50L
-            val steps = tempoTotal / interval
-            repeat(steps.toInt()) { step ->
+            val inicioTimer = System.currentTimeMillis()
+            val fimTimer = inicioTimer + tempoRealRestante
+
+            Log.d("TIMER_DEBUG", "🚀 Iniciando timer baseado em tempo real")
+
+            while (true) {
+                val agoraLoop = System.currentTimeMillis()
+                val tempoRestanteAtual = fimTimer - agoraLoop
+
+                if (tempoRestanteAtual <= 0) break
+
+                progressoTimer = tempoRestanteAtual.toFloat() / duracaoTurno.toFloat()
+
                 delay(interval)
-                progressoTimer = 1.0f - (step + 1) / steps.toFloat()
             }
-            progressoTimer = 0.0f // Garante zerado no final
-            // Aqui você pode chamar ação de fold automático, etc
+
+            progressoTimer = 0.0f
+            Log.d("TIMER_DEBUG", "🏁 Timer finalizado!")
         }
     }
+
+
+
+
 
     // Função de refresh da mesa
     fun refreshMesa() {
@@ -148,16 +189,17 @@ fun MesaScreen(
                 // AGORA SIM, faz as verificações!
                 Log.d("MK_DEBUG", "Mesa atualizada! rodada_id: ${mesaBody?.rodada_id}, last: $lastRodadaId")
 
+                val timestamp = mesaBody?.vez_timestamp
+
                 if (mesaBody != null && mesaBody.rodada_id != lastRodadaId) {
                     Log.d("WS", "🎯 Nova rodada detectada (refreshMesa)! Resetando timer do jogador da vez.")
-                    resetarTimerJogadorDaVez()
+                    resetarTimerJogadorDaVez(timestamp ?: System.currentTimeMillis())
                     lastRodadaId = mesaBody.rodada_id
                     lastJogadorDaVezId = mesaBody.jogador_da_vez
                 } else {
-                    // Mudou só o jogador da vez
                     if (jogadorDaVezId != null && jogadorDaVezId != lastJogadorDaVezId) {
                         Log.d("TIMER_DEBUG", "Mudou o jogador da vez! Resetando timer.")
-                        resetarTimerJogadorDaVez()
+                        resetarTimerJogadorDaVez(timestamp ?: System.currentTimeMillis())
                         lastJogadorDaVezId = jogadorDaVezId
                     }
                 }
@@ -231,6 +273,21 @@ fun MesaScreen(
                     else jogador
                 }
             },
+
+            onVezAtualizada = { jogadorId, timestamp ->
+                timestampRecebidoLocalmente = System.currentTimeMillis()
+
+                Log.d("TIMER_DEBUG", "Vez atualizada para jogadorId: $jogadorId, timestamp: $timestamp")
+
+                resetarTimerJogadorDaVez(timestamp)
+
+                // Se não for sua vez, só zera o progresso visual, senão continua normal
+                if (jogadorId != userIdToken) {
+                    progressoTimer = 0f
+                    timerJob?.cancel()
+                }
+            },
+
 
             // 🆕 Novo callback:
             onRemovidoSemSaldo = {

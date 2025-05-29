@@ -113,7 +113,7 @@ fun PromotoresScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(28.dp)) // Espaço antes da lista de promotores
 
         // --- LISTA DE PROMOTORES AGORA VEM DEPOIS ---
-// ... outros componentes acima (receber fichas, etc)
+        // ... outros componentes acima (receber fichas, etc)
 
         if (loading) {
             CircularProgressIndicator(color = Color(0xFFFFD700))
@@ -185,7 +185,7 @@ fun PromotoresScreen(navController: NavController) {
                                 modifier = Modifier.padding(top = 2.dp, bottom = 2.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                repeat(4) { Text("⭐", fontSize = 13.sp) }
+                                repeat(5) { Text("⭐", fontSize = 13.sp) }
                             }
                             Text(
                                 text = "Atendimento VIP!",
@@ -195,12 +195,12 @@ fun PromotoresScreen(navController: NavController) {
                                 fontWeight = FontWeight.Normal,
                                 maxLines = 1
                             )
-                            Text(
-                                text = "Curitiba/PR · No Pano desde 2024",
-                                color = Color.Gray,
-                                fontSize = 12.sp,
-                                maxLines = 1
-                            )
+//                            Text(
+//                                text = "Curitiba/PR · No Pano desde 2024",
+//                                color = Color.Gray,
+//                                fontSize = 12.sp,
+//                                maxLines = 1
+//                            ) MOCK
                         }
 
                         // Botões Loja + WhatsApp
@@ -244,7 +244,7 @@ fun PromotoresScreen(navController: NavController) {
                             Button(
                                 onClick = {
                                     val url =
-                                        "http://192.168.0.9:8000/loja/promotor/${promotor.slug}"
+                                        "https://www.panopoker.com/loja/promotor/${promotor.slug}" // IPZADA
                                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                                     context.startActivity(intent)
                                 },
