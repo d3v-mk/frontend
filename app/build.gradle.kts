@@ -70,6 +70,8 @@ android {
 
 dependencies {
 
+    implementation ("androidx.media:media:1.2.1")
+
     implementation("com.google.accompanist:accompanist-flowlayout:0.30.1")
     implementation ("androidx.compose.foundation:foundation:1.5.0") // ou superior
 

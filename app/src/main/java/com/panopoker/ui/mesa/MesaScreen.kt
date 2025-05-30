@@ -1,5 +1,6 @@
 package com.panopoker.ui.mesa
 
+import android.media.MediaPlayer
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -34,6 +35,7 @@ import kotlinx.coroutines.withContext
 import com.panopoker.ui.mesa.components.PerfilDoJogadorDialog
 import com.panopoker.ui.utils.processarShowdown
 import kotlinx.coroutines.Job
+import com.panopoker.R
 
 
 @Composable
@@ -105,6 +107,23 @@ fun MesaScreen(
             val jogadorAtual = jogadores.find { it.user_id == userIdToken }
             val saldo = jogadorAtual?.saldo_atual ?: 0.01f
             raiseValue = (saldo / 2f).coerceIn(0.01f, saldo)
+        }
+    }
+
+    fun tocarSom(resId: Int) {
+        val mediaPlayer = MediaPlayer.create(context, resId)
+        mediaPlayer.start()
+        mediaPlayer.setOnCompletionListener { it.release() }
+    }
+
+    fun reproduzirSom(tipo: String) {
+        when (tipo) {
+            "check" -> tocarSom(R.raw.check)
+            "call" -> tocarSom(R.raw.call_voz)
+            "raise" -> tocarSom(R.raw.raise_voz)
+            "fold" -> tocarSom(R.raw.fold_voz)
+            "allin" -> tocarSom(R.raw.allin_voz)
+            else -> Log.d("SOM", "🔇 Tipo de som desconhecido: $tipo")
         }
     }
 
@@ -267,6 +286,9 @@ fun MesaScreen(
         WebSocketClient(
             mesaId = mesaId,
             token = accessToken,
+
+
+
             onRevelarCartas = { jogadorId ->
                 jogadores = jogadores.map { jogador ->
                     if (jogador.user_id == jogadorId) jogador.copy(participando_da_rodada = true)
@@ -294,6 +316,12 @@ fun MesaScreen(
                 //showSemFichasDialog = true
 
             },
+
+            onSomJogada = { tipo ->
+                Log.d("SOM_DEBUG", "Recebido som_jogada: $tipo")
+                reproduzirSom(tipo)  // chama a função local direto
+            },
+
 
             onMesaAtualizada = {
                 Log.d("WS", "🌀 Atualizando mesa via WebSocket")

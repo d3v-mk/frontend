@@ -123,6 +123,7 @@ fun MesasPokerScreen(
                             erroMatch = null
                             var matchWs: WebSocketClient? = null
                             matchWs = WebSocketClient(
+                                //context = context,
                                 mesaId = 0,
                                 token = token ?: "",
                                 tipoMatch = tipo, // bronze, prata, ouro
