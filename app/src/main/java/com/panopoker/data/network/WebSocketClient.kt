@@ -58,6 +58,16 @@ class WebSocketClient(
                 try {
                     val json = JSONObject(text)
 
+                    // Aqui detecta o "ping" vindo do backend (que você manda como {"evento": "ping"})
+                    if (json.optString("evento") == "ping") {
+                        // Responde com "pong"
+                        val pong = JSONObject()
+                        pong.put("evento", "pong")
+                        webSocket.send(pong.toString())
+                        Log.d("WS", "🏓 Pong enviado em resposta ao ping")
+                        return // Não precisa processar mais nada
+                    }
+
                     if (json.optString("tipo") == "revelar_cartas") {
                         val jogadorId = json.getInt("jogador_id")
                         Log.d("WS", "🎯 Revelação recebida de $jogadorId")
