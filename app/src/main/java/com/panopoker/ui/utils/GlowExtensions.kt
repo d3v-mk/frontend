@@ -15,8 +15,8 @@ fun Modifier.glowEffect(): Modifier = composed {
     val infiniteTransition = rememberInfiniteTransition(label = "glowEffectTransition")
 
     val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 0.9f,
+        initialValue = 0.15f, // 👈 antes era 0.3f
+        targetValue = 0.4f,   // 👈 antes era 0.9f
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 700, easing = FastOutLinearInEasing),
             repeatMode = RepeatMode.Reverse

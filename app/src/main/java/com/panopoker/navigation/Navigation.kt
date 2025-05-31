@@ -33,18 +33,18 @@ fun PanoPokerNav() {
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate("lobby")
-                },
-                onRegisterClick = {
-                    navController.navigate("register")
                 }
+//                onRegisterClick = {
+//                    navController.navigate("register")
+//                }
             )
         }
 
-        composable("register") {
-            RegisterScreen(onRegisterSuccess = {
-                navController.navigate("login")
-            })
-        }
+//        composable("register") {
+//            RegisterScreen(onRegisterSuccess = {
+//                navController.navigate("login")
+//            })
+//        }
 
         composable("perfil") {
             PerfilScreen(navController = navController)

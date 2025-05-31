@@ -60,24 +60,31 @@ fun CartasDoJogador(
                                 .graphicsLayer {
                                     rotationZ = if (cartas.size == 2 && idx == 0) -15f else 15f
                                 }
-                                // eleva só as vencedoras acima das outras
                                 .zIndex(if (isVencedora) 1f else 0f)
-                                .background(Color.White, RoundedCornerShape(4.dp))
-                                .border(
-                                    width = if (isVencedora) 2.dp else 1.dp,
-                                    color = if (isVencedora) Color.Yellow else Color.Black,
-                                    shape = RoundedCornerShape(4.dp)
-                                )
-                                .then(if (isVencedora) Modifier.glowEffect() else Modifier)
                         ) {
-                            Image(
-                                painter = painterResource(id),
-                                contentDescription = null,
-                                contentScale = ContentScale.Fit,
+                            // Camada da carta (fundo + borda + imagem)
+                            Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(largura * 0.002f)
-                            )
+                            ) {
+                                Image(
+                                    painter = painterResource(id),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Fit,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(largura * 0.002f)
+                                )
+                            }
+
+                            // Camada do glow por cima
+                            if (isVencedora) {
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .glowEffect() // essa vai brilhar por cima
+                                )
+                            }
                         }
                     }
                 }

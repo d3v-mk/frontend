@@ -1,6 +1,10 @@
 package com.panopoker.ui.mesa.components
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -57,21 +61,46 @@ fun CartaComAnimacaoFlip(
 
 @Composable
 private fun CartaFrente(frenteResId: Int, brilhar: Boolean) {
+    // Anima o alpha só se precisar brilhar
+    val infiniteTransition = rememberInfiniteTransition(label = "glowTop")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.2f,
+        targetValue = 0.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 700),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "alphaAnimTop"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .clip(RoundedCornerShape(4.dp))
-            .background(Color.White)
-            .then(if (brilhar) Modifier.glowEffect() else Modifier) // ✨ aqui brilha
     ) {
+        // Imagem da carta
         Image(
             painter = painterResource(id = frenteResId),
             contentDescription = "Carta Frente",
             contentScale = ContentScale.FillBounds,
             modifier = Modifier.fillMaxSize()
         )
+
+        // Glow por cima com animação
+        if (brilhar) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        color = Color.Yellow.copy(alpha = alpha),
+                        shape = RoundedCornerShape(4.dp)
+                    )
+            )
+        }
     }
 }
+
+
 
 @Composable
 private fun CartaVerso() {

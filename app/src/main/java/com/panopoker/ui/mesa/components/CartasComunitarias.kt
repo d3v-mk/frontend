@@ -96,19 +96,13 @@ fun CartaAnimadaComposable(
             .width(largura)
             .aspectRatio(0.68f)
             .clip(RoundedCornerShape(6.dp))
-            .background(Color.White)
-            .border(
-                width = if (isGlow) 2.dp else 1.dp,
-                color = if (isGlow) Color.Yellow else Color.Black,
-                shape = RoundedCornerShape(6.dp)
-            )
             .graphicsLayer {
                 rotationY = rotacaoY
                 cameraDistance = 12 * density
-                scaleX = if (rotacaoY > 90f) -1f else 1f // 👉 corrige a inversão
+                scaleX = if (rotacaoY > 90f) -1f else 1f
             }
-            .then(if (isGlow) Modifier.glowEffect() else Modifier)
     ) {
+        // Carta
         Image(
             painter = painterResource(if (mostrarFrente) frenteResId else versoResId),
             contentDescription = null,
@@ -117,5 +111,14 @@ fun CartaAnimadaComposable(
                 .padding(2.dp),
             contentScale = ContentScale.Crop
         )
+
+        // Glow por cima
+        if (isGlow) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .glowEffect()
+            )
+        }
     }
 }
