@@ -32,9 +32,19 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
+        debug {
+            buildConfigField("String", "API_BASE_URL", "\"http://192.168.0.9:8080\"")
+            buildConfigField("String", "WS_BASE_URL", "\"ws://192.168.0.9:8080\"")
+        }
         release {
-            isMinifyEnabled = false
+            buildConfigField("String", "API_BASE_URL", "\"https://api.panopoker.com\"")
+            buildConfigField("String", "WS_BASE_URL", "\"wss://api.panopoker.com\"")
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -43,8 +53,8 @@ android {
         }
     }
 
-    // Mágica de renomear o APK
-    android.applicationVariants.all {
+
+    applicationVariants.all {
         if (buildType.name == "release") {
             outputs.all {
                 val outputImpl = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
@@ -52,6 +62,7 @@ android {
             }
         }
     }
+
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

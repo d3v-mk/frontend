@@ -2,6 +2,7 @@ package com.panopoker.data.network
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.panopoker.BuildConfig
 import com.panopoker.data.service.LobbyService
 import com.panopoker.data.service.MesaService
 import com.panopoker.data.service.PromotorService
@@ -12,7 +13,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
-    private const val BASE_URL = "http://192.168.0.9:8000" // IPZADA
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -28,7 +28,6 @@ object RetrofitInstance {
         .addInterceptor(loggingInterceptor)
         .build()
 
-
     private val gson: Gson = GsonBuilder()
         .setLenient()
         .serializeNulls()
@@ -36,13 +35,12 @@ object RetrofitInstance {
 
     val retrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(BuildConfig.API_BASE_URL) // 👈 Agora puxa automático!
             .client(client)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
 
-    // ✅ ADICIONA ISSO AQUI EMBAIXO
     val promotorService: PromotorService by lazy {
         retrofit.create(PromotorService::class.java)
     }

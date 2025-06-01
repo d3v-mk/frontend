@@ -42,6 +42,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.alpha
 import com.google.accompanist.flowlayout.FlowRow
+import com.panopoker.BuildConfig
+
 
 
 data class Conquista(
@@ -112,7 +114,7 @@ fun PerfilScreen(navController: NavController) {
     }
 
     perfil?.let { user ->
-        val baseUrl = "https://api.panopoker.com" // IPZADA
+        val baseUrl = BuildConfig.API_BASE_URL // IPZADA
         val avatarRaw = user.avatarUrl ?: ""
         val finalAvatarUrl = if (avatarRaw.startsWith("http")) {
             "$avatarRaw?t=${avatarUrlCacheBuster.value}"

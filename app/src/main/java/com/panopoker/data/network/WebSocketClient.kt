@@ -3,6 +3,7 @@ package com.panopoker.network
 import android.util.Log
 import okhttp3.*
 import org.json.JSONObject
+import com.panopoker.BuildConfig
 
 class WebSocketClient(
     private val mesaId: Int,
@@ -26,7 +27,7 @@ class WebSocketClient(
 
     fun connect() {
         val request = Request.Builder()
-            .url("ws://192.168.0.9:8000/ws/mesa/$mesaId") // IPZADA
+            .url("${BuildConfig.WS_BASE_URL}/ws/mesa/$mesaId") // IPZADA
             .build()
 
         webSocket = client.newWebSocket(request, object : WebSocketListener() {

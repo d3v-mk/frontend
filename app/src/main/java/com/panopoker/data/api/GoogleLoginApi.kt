@@ -2,6 +2,7 @@ package com.panopoker.data.api
 
 import android.content.Context
 import android.util.Log
+import com.panopoker.BuildConfig
 import com.panopoker.data.session.SessionManager
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -15,7 +16,7 @@ fun loginWithGoogleToken(
     onSuccess: () -> Unit
 ) {
     val retrofit = Retrofit.Builder()
-        .baseUrl("http://192.168.0.9:8000/") // IPZADA
+        .baseUrl(BuildConfig.API_BASE_URL) // IPZADA
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
