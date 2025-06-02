@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -65,12 +66,17 @@ fun SplashScreen(onSplashFinished: (String) -> Unit) {
         }
     }
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black),
         contentAlignment = Alignment.Center
     ) {
+        val density = LocalDensity.current
+        val offsetY = with(density) {
+            -constraints.maxHeight.toDp() * 0.05f
+        }
+
         AnimatedVisibility(
             visible = visible,
             enter = fadeIn(),
@@ -78,28 +84,15 @@ fun SplashScreen(onSplashFinished: (String) -> Unit) {
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 48.dp),
+                    .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo_pano),
-                        contentDescription = "Logo PanoPoker",
-                        modifier = Modifier
-                            .size(500.dp)
-                            .shadow(10.dp, RoundedCornerShape(20.dp))
-                    )
-                }
-
                 Text(
                     text = typedText,
                     fontSize = 13.sp,
                     fontFamily = syncopateFont,
                     color = Color(0xFFFFD700),
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 230.dp)
+                    modifier = Modifier.offset(y = offsetY)
                 )
             }
         }

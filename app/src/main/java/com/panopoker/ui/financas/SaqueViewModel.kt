@@ -28,7 +28,7 @@ class SaqueViewModel(context: Context) : ViewModel() {
                 val resposta = saqueService.getMeuSaque("Bearer $token")
                 saque = resposta
             } catch (e: Exception) {
-                erro = "Nenhum saque pendente encontrado."
+                erro = "Nenhuma requisição pendente encontrada."
             }
         }
     }

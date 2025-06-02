@@ -8,6 +8,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -91,6 +92,9 @@ fun MesaScreen(
 
     val momentoRecebido = System.currentTimeMillis()
     var timestampRecebidoLocalmente by remember { mutableLongStateOf(0L) }
+
+    val mostrarDialogManutencao = remember { mutableStateOf(false) }
+
 
 
 
@@ -189,6 +193,13 @@ fun MesaScreen(
                 }
                 val mesaBody = mesaResponse.body()
 
+                // Aqui: verifica manutenção e ativa o diálogo
+                if (mesaBody?.status == "manutencao") {
+                    mostrarDialogManutencao.value = true
+                } else {
+                    mostrarDialogManutencao.value = false
+                }
+
                 // Atualiza states ANTES de checar o timer!
                 mesa = mesaBody
                 faseDaRodada = mesaBody?.estado_da_rodada
@@ -223,7 +234,6 @@ fun MesaScreen(
                     }
                 }
 
-
                 val respJogadores = withContext(Dispatchers.IO) {
                     service.getJogadoresDaMesa(mesaId, "Bearer $accessToken")
                 }
@@ -257,6 +267,7 @@ fun MesaScreen(
             }
         }
     }
+
 
     fun carregarPerfilDoJogador(userId: Int) {
         Log.d("DialogDebug", "🔍 Buscando perfil do jogador $userId")
@@ -422,6 +433,21 @@ fun MesaScreen(
                 )
             }
         }
+
+        // dialog de manutencao
+        if (mostrarDialogManutencao.value) {
+            AlertDialog(
+                onDismissRequest = { mostrarDialogManutencao.value = false },
+                title = { Text(text = "Manutenção Programada") },
+                text = { Text("Pots distribuidos normalmente. Por favor, aguarde enquanto realizamos melhorias.") },
+                confirmButton = {
+                    TextButton(onClick = { mostrarDialogManutencao.value = false }) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
+
 
 
 

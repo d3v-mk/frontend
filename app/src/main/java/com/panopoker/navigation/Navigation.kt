@@ -13,6 +13,10 @@ import com.panopoker.ui.mesa.MesaScreen
 import com.panopoker.ui.splash.SplashScreen
 import com.panopoker.ui.perfil.PerfilScreen
 import com.panopoker.ui.financas.PromotoresScreen
+import com.panopoker.ui.lobby.AmigosScreen
+import com.panopoker.ui.lobby.EquipeScreen
+import com.panopoker.ui.lobby.RankScreen
+import com.panopoker.ui.lobby.VipScreen
 
 
 @Composable
@@ -33,14 +37,14 @@ fun PanoPokerNav() {
             LoginScreen(
                 onLoginSuccess = {
                     navController.navigate("lobby")
-                }
-//                onRegisterClick = {
+                } //tirar essa porra dessa virgula tbm (ou coloca ela se for usar o login p debug)
+//                onRegisterClick = { //tirar essa parte dps
 //                    navController.navigate("register")
 //                }
             )
         }
 
-//        composable("register") {
+//        composable("register") { //tirar isso tudo dps
 //            RegisterScreen(onRegisterSuccess = {
 //                navController.navigate("login")
 //            })
@@ -60,6 +64,22 @@ fun PanoPokerNav() {
 
         composable("promotores") {
             PromotoresScreen(navController = navController)
+        }
+
+        composable("amigos") {
+            AmigosScreen()
+        }
+
+        composable("equipe") {
+            EquipeScreen()
+        }
+
+        composable("rank") {
+            RankScreen()
+        }
+
+        composable("vip") {
+            VipScreen()
         }
 
 

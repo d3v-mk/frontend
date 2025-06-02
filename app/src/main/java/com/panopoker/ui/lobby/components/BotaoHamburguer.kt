@@ -170,12 +170,33 @@ fun MenuLateralCompleto(
                     }
                 }
 
-                DrawerItem("Amigos 👥") { /* implementar depois */ }
+                DrawerItem("Amigos 👥") {
+                    scope.launch {
+                        drawerState.close()
+                        navController.navigate("amigos")
+                    }
+                }
 
-                DrawerItem("Equipe 🔥") { /* implementar depois */ }
+                DrawerItem("Equipe 🔥") {
+                    scope.launch {
+                        drawerState.close()
+                        navController.navigate("equipe")
+                    }
+                }
 
-                DrawerItem("Rank 🏆") { /* implementar depois */ }
-                DrawerItem("Meu VIP 💎") { /* implementar depois */ }
+                DrawerItem("Rank 🏆") {
+                    scope.launch {
+                        drawerState.close()
+                        navController.navigate("rank")
+                    }
+                }
+
+                DrawerItem("Meu VIP 💎") {
+                    scope.launch {
+                        drawerState.close()
+                        navController.navigate("vip")
+                    }
+                }
 
                 DrawerItem("Promotores \uD83E\uDD1D") {
                     scope.launch {

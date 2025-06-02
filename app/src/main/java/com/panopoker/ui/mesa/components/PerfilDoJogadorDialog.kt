@@ -37,7 +37,7 @@ fun PerfilDoJogadorDialog(
 
     // Avatar! Usa fallback com base no nome
     val avatarCacheBuster = remember(perfil.avatarUrl) { System.currentTimeMillis() }
-    val fallback = "https://i.imgur.com/q0fxp3t.jpeg"
+    val fallback = "https://i.imgur.com/1MfqtXH.png"
     val baseUrl = if (perfil.avatarUrl.isNullOrBlank()) fallback else perfil.avatarUrl
     val avatarUrl = "$baseUrl?t=$avatarCacheBuster"
     //

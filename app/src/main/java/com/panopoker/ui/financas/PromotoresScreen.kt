@@ -188,7 +188,7 @@ fun PromotoresScreen(navController: NavController) {
                                 repeat(5) { Text("⭐", fontSize = 13.sp) }
                             }
                             Text(
-                                text = "Atendimento VIP!",
+                                text = "Online!",
                                 color = Color(0xFFFFE082),
                                 fontSize = 13.sp,
                                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,

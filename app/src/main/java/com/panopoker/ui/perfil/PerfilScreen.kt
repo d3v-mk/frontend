@@ -41,8 +41,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.painterResource
 import com.google.accompanist.flowlayout.FlowRow
 import com.panopoker.BuildConfig
+import com.panopoker.R
 
 
 
@@ -134,11 +136,11 @@ fun PerfilScreen(navController: NavController) {
             Conquista("Peixe", "🐟", "Total de 150 fichas ganhas", user.fichas_ganhas > 150),
             Conquista("Tubarão", "🦈", "Total de 500 fichas ganhas", user.fichas_ganhas > 500),
             Conquista("Baleia", "🐋", "Total de 1000 fichas ganhas", user.fichas_ganhas > 1000),
-            Conquista("Honey Pot", "🍯", "Ganhe um pote de 100", user.maior_pote > 100),
-            Conquista("Honey Honey Pot", "🐝", "Ganhe um pote de 500", user.maior_pote > 500),
+            Conquista("Honey Pot", "🍯", "Ganhe um pote de 25 fichas", user.maior_pote > 25),
+            Conquista("Honey Honey Pot", "🐝", "Ganhe um pote de 50 fichas", user.maior_pote > 50),
             Conquista("Promotor", "🤵🏻‍♂️", "Parabéns, você é promotor do Pano!", user.is_promoter), //
             Conquista("Beta Tester", "️🎉", "Participou da versão Beta do Pano!", user.beta_tester > 0), //
-            //Conquista("1 ano de serviço", "️1️⃣", "Joga desde {data}", user.is_promoter) //
+            Conquista("1 ano de serviço", "️1️⃣", "Joga no Pano ja faz 1 ano!", user.vezes_no_top1 > 999999) //
 
 
         )
@@ -160,12 +162,16 @@ fun PerfilScreen(navController: NavController) {
                 model = finalAvatarUrl,
                 contentDescription = "Avatar",
                 contentScale = ContentScale.Crop,
+                placeholder = painterResource(R.drawable.avatar_default),
+                error = painterResource(R.drawable.avatar_default),
+                fallback = painterResource(R.drawable.avatar_default),
                 modifier = Modifier
                     .size(130.dp)
                     .shadow(10.dp, CircleShape)
                     .clip(CircleShape)
                     .border(2.dp, Color.Green, CircleShape)
             )
+
 
             TextButton(onClick = { launcher.launch("image/*") }) {
                 Text("Alterar Avatar", color = Color.Yellow, fontSize = 14.sp)

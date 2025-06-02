@@ -58,7 +58,7 @@ fun AvatarJogador(
 
     /// atualiza o cache do coil pra mostrar o avatar novo + fallback
     val avatarTimestamp = remember(jogador.avatarUrl) { System.currentTimeMillis() }
-    val fallback = "https://i.imgur.com/q0fxp3t.jpeg"
+    val fallback = "https://i.imgur.com/1MfqtXH.png"
     val baseUrl = jogador.avatarUrl?.takeIf { it.isNotBlank() } ?: fallback
     val finalAvatarUrl = "$baseUrl?v=$avatarTimestamp"
     ///
