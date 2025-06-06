@@ -44,7 +44,7 @@ android {
         release {
             buildConfigField("String", "API_BASE_URL", "\"https://api.panopoker.com\"")
             buildConfigField("String", "WS_BASE_URL", "\"wss://api.panopoker.com\"")
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

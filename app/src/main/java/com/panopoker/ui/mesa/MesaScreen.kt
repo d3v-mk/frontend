@@ -395,7 +395,6 @@ fun MesaScreen(
     }
 
 
-
     // Layout principal da mesa
     Box(
         modifier = Modifier
@@ -421,38 +420,16 @@ fun MesaScreen(
             )
         }
 
-
-        // Vencedores do showdown //
-        if (showVencedores && showdownInfoPersistente != null) {
-            val listaShowdown = showdownInfoPersistente?.showdown
-            if (!listaShowdown.isNullOrEmpty()) {
-                VencedoresShowdown(
-                    vencedores = showdownInfoPersistente!!.vencedores,
-                    jogadores = jogadores,
-                    showdown = listaShowdown
-                )
-            }
-        }
-
-        // dialog de manutencao
-        if (mostrarDialogManutencao.value) {
-            AlertDialog(
-                onDismissRequest = { mostrarDialogManutencao.value = false },
-                title = { Text(text = "Manutenção Programada") },
-                text = { Text("Pots distribuidos normalmente. Por favor, aguarde enquanto realizamos melhorias.") },
-                confirmButton = {
-                    TextButton(onClick = { mostrarDialogManutencao.value = false }) {
-                        Text("OK")
-                    }
-                }
-            )
-        }
-
-
-
-
-
-
+        // Dialogs em geral
+        MesaDialogs(
+            mostrarDialogManutencao = mostrarDialogManutencao,
+            showVencedores = showVencedores,
+            showdownInfoPersistente = showdownInfoPersistente,
+            jogadores = jogadores,
+            perfilSelecionado = perfilSelecionado,
+            mostrarDialog = mostrarDialog,
+            showSemFichasDialog = showSemFichasDialog
+        )
 
 
         // Fichas do pote
@@ -509,24 +486,6 @@ fun MesaScreen(
                 context = context,
                 cartasGlow = if (faseDaRodada == "showdown") cartasGlowDoJogador[userIdToken] ?: emptyList() else emptyList()
             )
-        }
-
-        // mostrar dialog
-        if (mostrarDialog.value && perfilSelecionado.value != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(9999f)
-                    .background(Color.Black.copy(alpha = 0.6f))
-            ) {
-                PerfilDoJogadorDialog(
-                    perfil = perfilSelecionado.value!!,
-                    onDismiss = {
-                        mostrarDialog.value = false
-                        perfilSelecionado.value = null
-                    }
-                )
-            }
         }
     }
 }///
