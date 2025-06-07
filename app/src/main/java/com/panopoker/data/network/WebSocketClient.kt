@@ -1,4 +1,4 @@
-package com.panopoker.network
+package com.panopoker.data.network
 
 import android.util.Log
 import okhttp3.*

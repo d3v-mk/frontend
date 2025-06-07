@@ -24,13 +24,7 @@ import coil.request.ImageRequest
 import com.panopoker.R
 import com.panopoker.model.Jogador
 import kotlinx.coroutines.delay
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.unit.Dp
 
 @Composable
 fun AvatarJogador(

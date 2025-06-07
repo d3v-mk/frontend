@@ -3,7 +3,7 @@
 
 import android.util.Log
 import com.panopoker.model.CartaGlowInfo
-import com.panopoker.network.WebSocketClient
+import com.panopoker.data.network.WebSocketClient
 import com.panopoker.ui.mesa.MesaState
 import com.panopoker.ui.utils.processarShowdown
 import kotlinx.coroutines.CoroutineScope

@@ -26,7 +26,6 @@ import androidx.navigation.NavController
 import com.panopoker.model.PromotorDto
 import com.panopoker.data.network.RetrofitInstance
 import com.panopoker.data.session.SessionManager
-import com.panopoker.ui.financas.SaqueViewModel
 import kotlinx.coroutines.launch
 
 @Composable

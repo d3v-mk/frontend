@@ -86,7 +86,7 @@ fun PanoPokerNav() {
         composable("mesa/{mesaId}") { backStackEntry ->
             val mesaId = backStackEntry.arguments?.getString("mesaId")?.toIntOrNull()
             if (mesaId != null) {
-                MesaScreen(mesaId = mesaId, navController = navController)
+                MesaScreen(mesaId = mesaId)
             }
         }
     }

@@ -19,12 +19,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.panopoker.data.session.SessionManager
-import com.panopoker.ui.components.BotaoHamburguer
-import com.panopoker.ui.components.MenuLateralCompleto
+import com.panopoker.ui.lobby.components.BotaoHamburguer
+import com.panopoker.ui.lobby.components.MenuLateralCompleto
 import com.panopoker.R
 import androidx.compose.ui.text.font.FontWeight
-import com.panopoker.network.WebSocketClient
-import kotlinx.coroutines.launch
+import com.panopoker.data.network.WebSocketClient
 
 @Composable
 fun MesasPokerScreen(

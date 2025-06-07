@@ -9,7 +9,7 @@ import com.panopoker.data.session.SessionManager
 import com.panopoker.data.network.RetrofitInstance
 import com.panopoker.model.SaqueDto
 import com.panopoker.model.ConfirmarSaqueRequest
-import com.panopoker.service.SaqueService
+import com.panopoker.data.service.SaqueService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

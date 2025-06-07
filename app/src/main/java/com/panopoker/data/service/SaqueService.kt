@@ -1,4 +1,4 @@
-package com.panopoker.service
+package com.panopoker.data.service
 
 import com.panopoker.model.SaqueDto
 import com.panopoker.model.ConfirmarSaqueRequest

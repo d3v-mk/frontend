@@ -1,10 +1,8 @@
 package com.panopoker.data.service
 
-import com.panopoker.model.JogadorDaVezDto
 import com.panopoker.model.CartasComunitariasResponse
 import com.panopoker.model.CartasResponse
 import com.panopoker.model.Jogador
-import com.panopoker.model.MesaLobbyDto
 import com.panopoker.model.MesaDto
 import com.panopoker.model.ShowdownDto
 import retrofit2.Response

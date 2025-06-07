@@ -1,6 +1,5 @@
 package com.panopoker.ui.mesa
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key

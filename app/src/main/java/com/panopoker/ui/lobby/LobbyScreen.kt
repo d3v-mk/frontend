@@ -21,12 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.rememberAsyncImagePainter
 import com.panopoker.R
 import com.panopoker.data.network.RetrofitInstance
-import com.panopoker.data.service.LobbyService
 import com.panopoker.data.session.SessionManager
-import com.panopoker.ui.components.MenuLateralCompleto
+import com.panopoker.ui.lobby.components.MenuLateralCompleto
 import com.panopoker.ui.lobby.components.NewsMarquee
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

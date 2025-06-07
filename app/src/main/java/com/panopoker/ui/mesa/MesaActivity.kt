@@ -1,6 +1,5 @@
 package com.panopoker.ui.mesa
 
-import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
@@ -13,7 +12,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
 import com.panopoker.ui.theme.PanopokerTheme
 import com.panopoker.data.session.SessionManager
-import com.panopoker.network.WebSocketClient
+import com.panopoker.data.network.WebSocketClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -56,7 +55,6 @@ class MesaActivity : ComponentActivity() {
             PanopokerTheme {
                 MesaScreen(
                     mesaId = mesaId,
-                    navController = null // ou passe o navController se usar
                 )
 
                 // Fullscreen após montar o conteúdo
