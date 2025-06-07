@@ -4,116 +4,48 @@ import android.media.MediaPlayer
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.panopoker.data.network.RetrofitInstance
 import com.panopoker.data.service.MesaService
 import com.panopoker.data.session.SessionManager
-import com.panopoker.model.CartaGlowInfo
-import com.panopoker.model.CartasComunitarias
-import com.panopoker.model.Jogador
-import com.panopoker.model.MesaDto
-import com.panopoker.model.PerfilResponse
-import com.panopoker.model.ShowdownDto
-import com.panopoker.network.WebSocketClient
 import com.panopoker.ui.mesa.components.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.panopoker.ui.mesa.components.PerfilDoJogadorDialog
-import com.panopoker.ui.utils.processarShowdown
-import kotlinx.coroutines.Job
 import com.panopoker.R
+import createMesaWebSocketClient
+import kotlinx.coroutines.CoroutineScope
 
 
 @Composable
 fun MesaScreen(
     mesaId: Int,
-    navController: NavController? = null,
 ) {
     val context = LocalContext.current
     val session = remember { SessionManager(context) }
     val accessToken = session.fetchAuthToken() ?: ""
     val userIdToken = session.getUserIdFromToken(accessToken) ?: -99
+    val usuarioLogadoId = userIdToken
     val coroutineScope = rememberCoroutineScope()
+    val state = rememberMesaState()
 
-    // Estados principais
-    var faseDaRodada by remember { mutableStateOf<String?>(null) }
-    var jogadores by remember { mutableStateOf<List<Jogador>>(emptyList()) }
-    var cartas by remember { mutableStateOf<CartasComunitarias?>(null) }
-    var minhasCartas by remember { mutableStateOf<List<String>>(emptyList()) }
-    var maoFormada by remember { mutableStateOf("") }
-    var jogadorDaVezId by remember { mutableStateOf<Int?>(null) }
-    var stackJogador by remember { mutableFloatStateOf(1f) }
-    var raiseValue by remember { mutableFloatStateOf(0f) }
-    var mostrarSlider by remember { mutableStateOf(false) }
-    var showdownInfo by remember { mutableStateOf<ShowdownDto?>(null) }
-    var mesa by remember { mutableStateOf<MesaDto?>(null) }
-    val usuarioLogadoId = session.fetchUserId()
-
-    //
-    var cartasComunitarias by remember { mutableStateOf(listOf<String>()) }
-    var estadoRodada by remember { mutableStateOf("") }
-
-    // jogador dialog
-    val mostrarDialog = remember { mutableStateOf(false) }
-    val perfilSelecionado = remember { mutableStateOf<PerfilResponse?>(null) }
-
-
-    var cartasGlowComunitarias by remember { mutableStateOf<List<CartaGlowInfo>>(emptyList()) }
-    var cartasGlowDoJogador by remember { mutableStateOf<Map<Int, List<CartaGlowInfo>>>(emptyMap()) }
-
-    var lastRodadaId by remember { mutableStateOf(-1) }
-
-    var progressoTimer by remember { mutableStateOf(1.0f) }
-    var timerJob by remember { mutableStateOf<Job?>(null) }
-
-    var lastJogadorDaVezId by remember { mutableStateOf<Int?>(null) }
-
-    var showSemFichasDialog by remember { mutableStateOf(false) }
-
-    var showVencedores by remember { mutableStateOf(false) }
-    var showdownInfoPersistente by remember { mutableStateOf<ShowdownDto?>(null) }
-
-
-
-    val momentoRecebido = System.currentTimeMillis()
-    var timestampRecebidoLocalmente by remember { mutableLongStateOf(0L) }
-
-    val mostrarDialogManutencao = remember { mutableStateOf(false) }
-
-
-
-
-
-
-
-
-
-
-
-    // Controle de slider
-    LaunchedEffect(mostrarSlider) {
-        if (mostrarSlider) {
-            val jogadorAtual = jogadores.find { it.user_id == userIdToken }
+    // ========== Slider ==========
+    LaunchedEffect(state.mostrarSlider.value) {
+        if (state.mostrarSlider.value) {
+            val jogadorAtual = state.jogadores.value.find { it.user_id == userIdToken }
             val saldo = jogadorAtual?.saldo_atual ?: 0.01f
-            raiseValue = (saldo / 2f).coerceIn(0.01f, saldo)
+            state.raiseValue.value = (saldo / 2f).coerceIn(0.01f, saldo)
         }
     }
 
+    // ========== Sons ==========
     fun tocarSom(resId: Int) {
         val mediaPlayer = MediaPlayer.create(context, resId)
         mediaPlayer.start()
@@ -131,157 +63,121 @@ fun MesaScreen(
         }
     }
 
-
-    fun resetarTimerJogadorDaVez(timestampServidor: Long) {
+    // ========== Timer ==========
+    fun resetarTimerJogadorDaVez(state: MesaState, timestampServidor: Long, coroutineScope: CoroutineScope) {
         Log.d("TIMER_DEBUG", "🔁 resetarTimerJogadorDaVez chamado com timestamp: $timestampServidor")
 
-        timerJob?.cancel()
-        progressoTimer = 1.0f
-
+        state.timerJob.value?.cancel()
+        state.progressoTimer.value = 1.0f
         val agora = System.currentTimeMillis()
-        timestampRecebidoLocalmente = agora
-
-        Log.d("TIMER_DEBUG", "⏱️ Agora: $agora")
-        Log.d("TIMER_DEBUG", "📦 timestampRecebidoLocalmente atualizado: $timestampRecebidoLocalmente")
+        state.timestampRecebidoLocalmente.value = agora
 
         val tempoPassadoDesdeServidor = agora - timestampServidor
         val duracaoTurno = 20_000L
         val tempoRealRestante = duracaoTurno - tempoPassadoDesdeServidor
 
-        Log.d("TIMER_DEBUG", "⏳ Tempo real restante para o turno: $tempoRealRestante ms")
-
         if (tempoRealRestante <= 0) {
-            Log.d("TIMER_DEBUG", "⚠️ Tempo já expirou. Não iniciando o timer.")
-            progressoTimer = 0.0f
+            state.progressoTimer.value = 0.0f
             return
         }
 
-        timerJob = coroutineScope.launch {
+        state.timerJob.value = coroutineScope.launch {
             val interval = 50L
-            val inicioTimer = System.currentTimeMillis()
-            val fimTimer = inicioTimer + tempoRealRestante
-
-            Log.d("TIMER_DEBUG", "🚀 Iniciando timer baseado em tempo real")
+            val fimTimer = System.currentTimeMillis() + tempoRealRestante
 
             while (true) {
-                val agoraLoop = System.currentTimeMillis()
-                val tempoRestanteAtual = fimTimer - agoraLoop
-
+                val tempoRestanteAtual = fimTimer - System.currentTimeMillis()
                 if (tempoRestanteAtual <= 0) break
-
-                progressoTimer = tempoRestanteAtual.toFloat() / duracaoTurno.toFloat()
-
+                state.progressoTimer.value = tempoRestanteAtual.toFloat() / duracaoTurno.toFloat()
                 delay(interval)
             }
 
-            progressoTimer = 0.0f
-            Log.d("TIMER_DEBUG", "🏁 Timer finalizado!")
+            state.progressoTimer.value = 0.0f
         }
     }
 
-
-
-
-
-    // Função de refresh da mesa
-    fun refreshMesa() {
+    // ========== Refresh ==========
+    fun refreshMesa(state: MesaState, coroutineScope: CoroutineScope, mesaId: Int, accessToken: String, userIdToken: Int) {
         coroutineScope.launch {
             try {
                 val service = RetrofitInstance.retrofit.create(MesaService::class.java)
                 val mesaResponse = withContext(Dispatchers.IO) {
                     service.getMesa(mesaId, "Bearer $accessToken")
                 }
+
                 val mesaBody = mesaResponse.body()
+                state.mostrarDialogManutencao.value = mesaBody?.status == "manutencao"
 
-                // Aqui: verifica manutenção e ativa o diálogo
-                if (mesaBody?.status == "manutencao") {
-                    mostrarDialogManutencao.value = true
-                } else {
-                    mostrarDialogManutencao.value = false
-                }
+                state.mesa.value = mesaBody
+                state.faseDaRodada.value = mesaBody?.estado_da_rodada
+                state.jogadorDaVezId.value = mesaBody?.jogador_da_vez
 
-                // Atualiza states ANTES de checar o timer!
-                mesa = mesaBody
-                faseDaRodada = mesaBody?.estado_da_rodada
-                jogadorDaVezId = mesaBody?.jogador_da_vez
-
-                // (??? nfunfa) 🧹 Se a mesa estiver "aberta", limpa todos os rastros da rodada anterior
                 if (mesaBody?.status == "aberta") {
-                    Log.d("WS", "🧼 Limpando mesa (status: aberta)")
-                    cartasComunitarias = emptyList()
-                    cartas = null
-                    showdownInfo = null
-                    estadoRodada = ""
-                    cartasGlowComunitarias = emptyList()
-                    cartasGlowDoJogador = emptyMap()
+                    state.cartasComunitarias.value = emptyList()
+                    state.cartas.value = null
+                    state.showdownInfo.value = null
+                    state.estadoRodada.value = ""
+                    state.cartasGlowComunitarias.value = emptyList()
+                    state.cartasGlowDoJogador.value = emptyMap()
                 }
-
-                // AGORA SIM, faz as verificações!
-                Log.d("MK_DEBUG", "Mesa atualizada! rodada_id: ${mesaBody?.rodada_id}, last: $lastRodadaId")
 
                 val timestamp = mesaBody?.vez_timestamp
-
-                if (mesaBody != null && mesaBody.rodada_id != lastRodadaId) {
-                    Log.d("WS", "🎯 Nova rodada detectada (refreshMesa)! Resetando timer do jogador da vez.")
-                    resetarTimerJogadorDaVez(timestamp ?: System.currentTimeMillis())
-                    lastRodadaId = mesaBody.rodada_id
-                    lastJogadorDaVezId = mesaBody.jogador_da_vez
-                } else {
-                    if (jogadorDaVezId != null && jogadorDaVezId != lastJogadorDaVezId) {
-                        Log.d("TIMER_DEBUG", "Mudou o jogador da vez! Resetando timer.")
-                        resetarTimerJogadorDaVez(timestamp ?: System.currentTimeMillis())
-                        lastJogadorDaVezId = jogadorDaVezId
-                    }
+                if (mesaBody != null && mesaBody.rodada_id != state.lastRodadaId.value) {
+                    resetarTimerJogadorDaVez(state, timestamp ?: System.currentTimeMillis(), coroutineScope)
+                    state.lastRodadaId.value = mesaBody.rodada_id
+                    state.lastJogadorDaVezId.value = mesaBody.jogador_da_vez
+                } else if (state.jogadorDaVezId.value != state.lastJogadorDaVezId.value) {
+                    resetarTimerJogadorDaVez(state, timestamp ?: System.currentTimeMillis(), coroutineScope)
+                    state.lastJogadorDaVezId.value = state.jogadorDaVezId.value
                 }
 
-                val respJogadores = withContext(Dispatchers.IO) {
+                val jogadoresResp = withContext(Dispatchers.IO) {
                     service.getJogadoresDaMesa(mesaId, "Bearer $accessToken")
                 }
-                jogadores = (respJogadores.body() ?: emptyList()).map { it.copy() }
+                state.jogadores.value = jogadoresResp.body()?.map { it.copy() } ?: emptyList()
 
-                val respMinhas = withContext(Dispatchers.IO) {
+                val minhasCartasResp = withContext(Dispatchers.IO) {
                     service.getMinhasCartas(mesaId, "Bearer $accessToken")
                 }
-                minhasCartas = respMinhas.body()?.cartas ?: emptyList()
-                maoFormada = respMinhas.body()?.mao_formada ?: ""
+                state.minhasCartas.value = minhasCartasResp.body()?.cartas ?: emptyList()
+                state.maoFormada.value = minhasCartasResp.body()?.mao_formada ?: ""
 
-                jogadores.find { it.user_id == userIdToken }?.let {
-                    stackJogador = it.saldo_atual
+                state.jogadores.value.find { it.user_id == userIdToken }?.let {
+                    state.stackJogador.value = it.saldo_atual
                 }
 
-                val respComunitarias = withContext(Dispatchers.IO) {
+                val comunitariasResp = withContext(Dispatchers.IO) {
                     service.getCartasComunitarias(mesaId, "Bearer $accessToken")
                 }
-                cartas = respComunitarias.body()?.cartas_comunitarias
+                state.cartas.value = comunitariasResp.body()?.cartas_comunitarias
 
-                if (faseDaRodada == "showdown") {
+                if (state.faseDaRodada.value == "showdown") {
                     val respShow = withContext(Dispatchers.IO) {
                         service.getShowdown(mesaId, "Bearer $accessToken")
                     }
-                    if (respShow.isSuccessful) showdownInfo = respShow.body()
+                    if (respShow.isSuccessful) {
+                        state.showdownInfo.value = respShow.body()
+                    }
                 } else {
-                    showdownInfo = null
+                    state.showdownInfo.value = null
                 }
+
             } catch (e: Exception) {
-                Log.e("\uD83D\uDD25 MesaDebug", "❌ Erro ao atualizar mesa: ${e.message}")
+                Log.e("🔥 MesaDebug", "❌ Erro ao atualizar mesa: ${e.message}")
             }
         }
     }
 
-
-    fun carregarPerfilDoJogador(userId: Int) {
-        Log.d("DialogDebug", "🔍 Buscando perfil do jogador $userId")
+    // ========== Perfil ==========
+    fun carregarPerfilDoJogador(state: MesaState, userId: Int, coroutineScope: CoroutineScope, accessToken: String) {
         coroutineScope.launch {
             try {
                 val token = "Bearer $accessToken"
                 val service = RetrofitInstance.usuarioApi
                 val response = service.getPerfilDeOutroUsuario(userId, token)
-
                 if (response.isSuccessful) {
-                    perfilSelecionado.value = response.body()
-                    mostrarDialog.value = true
-                } else {
-                    Log.e("MesaScreen", "Erro ao buscar perfil: ${response.code()}")
+                    state.perfilSelecionado.value = response.body()
+                    state.mostrarDialog.value = true
                 }
             } catch (e: Exception) {
                 Log.e("MesaScreen", "Exceção ao buscar perfil: ${e.message}")
@@ -289,100 +185,19 @@ fun MesaScreen(
         }
     }
 
-
-
-
-    // WebSocket
+    // ========== WebSocket ==========
     val webSocketClient = remember(mesaId, accessToken) {
-        WebSocketClient(
-            mesaId = mesaId,
-            token = accessToken,
-
-
-
-            onRevelarCartas = { jogadorId ->
-                jogadores = jogadores.map { jogador ->
-                    if (jogador.user_id == jogadorId) jogador.copy(participando_da_rodada = true)
-                    else jogador
-                }
-            },
-
-            onVezAtualizada = { jogadorId, timestamp ->
-                timestampRecebidoLocalmente = System.currentTimeMillis()
-
-                Log.d("TIMER_DEBUG", "Vez atualizada para jogadorId: $jogadorId, timestamp: $timestamp")
-
-                resetarTimerJogadorDaVez(timestamp)
-
-                // Se não for sua vez, só zera o progresso visual, senão continua normal
-                if (jogadorId != userIdToken) {
-                    progressoTimer = 0f
-                    timerJob?.cancel()
-                }
-            },
-
-
-            // 🆕 Novo callback:
-            onRemovidoSemSaldo = {
-                //showSemFichasDialog = true
-
-            },
-
-            onSomJogada = { tipo ->
-                Log.d("SOM_DEBUG", "Recebido som_jogada: $tipo")
-                reproduzirSom(tipo)  // chama a função local direto
-            },
-
-
-            onMesaAtualizada = {
-                Log.d("WS", "🌀 Atualizando mesa via WebSocket")
-                refreshMesa()
-            },
-
-            onNovaFase = { estado, novasCartas ->
-                Log.d("WS", "🌊 Nova fase: $estado")
-
-                if (estado == "pre-flop") {
-                    // 🎉 Nova rodada: limpar brilhos antigos!
-                    cartasGlowComunitarias = emptyList()
-                    cartasGlowDoJogador = emptyMap()
-                }
-
-                estadoRodada = estado
-                cartasComunitarias = cartasComunitarias + novasCartas
-            },
-
-            onShowdown = { json ->
-                val showdown = processarShowdown(json)
-                showdownInfo = showdown
-
-                // Garante persistência do conteúdo + tempo de exibição do balao vencedores
-                showdownInfoPersistente = showdown
-                showVencedores = true
-
-                coroutineScope.launch {
-                    delay(8000) // tempo que quiser exibir
-                    showVencedores = false
-                    showdownInfoPersistente = null // limpa depois se quiser
-                }
-
-                // Glow para TODOS jogadores vencedores
-                cartasGlowDoJogador = showdown.showdown
-                    .filter { showdown.vencedores.contains(it.jogador_id) }
-                    .associate { it.jogador_id to it.cartas_utilizadas.map { c -> CartaGlowInfo(c.carta, c.indice) } }
-
-                cartasGlowComunitarias = showdown.showdown
-                    .filter { showdown.vencedores.contains(it.jogador_id) }
-                    .flatMap { it.cartas_utilizadas }
-                    .filter { it.origem == "mesa" }
-                    .map { CartaGlowInfo(it.carta, it.indice) }
-                    .distinct()
-            }
+        createMesaWebSocketClient(
+            mesaId,
+            accessToken,
+            state,
+            coroutineScope,
+            userIdToken,
+            ::reproduzirSom,
+            ::resetarTimerJogadorDaVez,
+            ::refreshMesa
         )
     }
-
-
-
 
     LaunchedEffect(mesaId) {
         webSocketClient.connect()
@@ -394,14 +209,13 @@ fun MesaScreen(
         }
     }
 
-
-    // Layout principal da mesa
+    // ========== UI Layout ==========
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        // Imagem de fundo
+        // Fundo
         Box(modifier = Modifier.align(Alignment.Center).zIndex(0f)) {
             MesaImagemDeFundo()
         }
@@ -411,83 +225,77 @@ fun MesaScreen(
             BotaoHamburguerMesa(context, webSocketClient, coroutineScope)
         }
 
-        // Cartas comunitárias com animação de brilho nas vencedoras
+        // Cartas comunitárias
         Box(modifier = Modifier.align(Alignment.Center)) {
             CartasComunitarias(
-                cartas = cartas,
+                cartas = state.cartas.value,
                 context = context,
-                cartasGlow = if (faseDaRodada == "showdown") cartasGlowComunitarias else emptyList()
+                cartasGlow = if (state.faseDaRodada.value == "showdown") state.cartasGlowComunitarias.value else emptyList()
             )
         }
 
-        // Dialogs em geral
+        // Dialogs
         MesaDialogs(
-            mostrarDialogManutencao = mostrarDialogManutencao,
-            showVencedores = showVencedores,
-            showdownInfoPersistente = showdownInfoPersistente,
-            jogadores = jogadores,
-            perfilSelecionado = perfilSelecionado,
-            mostrarDialog = mostrarDialog,
-            showSemFichasDialog = showSemFichasDialog
+            mostrarDialogManutencao = state.mostrarDialogManutencao,
+            showVencedores = state.showVencedores.value,
+            showdownInfoPersistente = state.showdownInfoPersistente.value,
+            jogadores = state.jogadores.value,
+            perfilSelecionado = state.perfilSelecionado,
+            mostrarDialog = state.mostrarDialog,
+            showSemFichasDialog = state.showSemFichasDialog.value
         )
 
-
-        // Fichas do pote
+        // Pote principal
         MainPot(
-            poteTotal = mesa?.pote_total?.toFloat() ?: 0f,
-            faseDaRodada = faseDaRodada
+            poteTotal = state.mesa.value?.pote_total?.toFloat() ?: 0f,
+            faseDaRodada = state.faseDaRodada.value ?: ""
         )
 
         // Controles de ação
         Box(modifier = Modifier.align(Alignment.BottomEnd)) {
             ControlesDeAcao(
-                jogadores = jogadores,
+                jogadores = state.jogadores.value,
                 userIdToken = userIdToken,
-                mostrarSlider = mostrarSlider,
-                raiseValue = raiseValue,
-                stackJogador = stackJogador,
+                mostrarSlider = state.mostrarSlider.value,
+                raiseValue = state.raiseValue.value,
+                stackJogador = state.stackJogador.value,
                 mesaId = mesaId,
                 accessToken = accessToken,
                 coroutineScope = coroutineScope,
-                onSliderChange = { raiseValue = it },
-                onMostrarSlider = { mostrarSlider = true },
-                onEsconderSlider = { mostrarSlider = false },
+                onSliderChange = { state.raiseValue.value = it },
+                onMostrarSlider = { state.mostrarSlider.value = true },
+                onEsconderSlider = { state.mostrarSlider.value = false },
                 webSocketClient = webSocketClient,
             )
         }
 
-        // Avatares na mesa
-        mesa?.let {
+        // Avatares
+        state.mesa.value?.let { mesa ->
             AvataresNaMesa(
-                jogadores = jogadores,
-                jogadorDaVezId = jogadorDaVezId,
+                jogadores = state.jogadores.value,
+                jogadorDaVezId = state.jogadorDaVezId.value,
                 usuarioLogadoId = usuarioLogadoId,
-                faseDaRodada = faseDaRodada,
-                poteTotal = it.pote_total.toFloat(),
-                maoFormada = maoFormada,
-                progressoTimer = progressoTimer,
-                cartasGlowDoJogador = cartasGlowDoJogador,
-                apostaAtualMesa = it.aposta_atual.toFloat(),
+                faseDaRodada = state.faseDaRodada.value ?: "",
+                poteTotal = mesa.pote_total.toFloat(),
+                maoFormada = state.maoFormada.value,
+                progressoTimer = state.progressoTimer.value,
+                cartasGlowDoJogador = state.cartasGlowDoJogador.value,
+                apostaAtualMesa = mesa.aposta_atual.toFloat(),
                 onClickJogador = { jogador ->
-                    Log.d("MK_DEBUG", "👆 Avatar clicado: ${jogador.username} (${jogador.user_id})") // 👈 AQUI
-                    carregarPerfilDoJogador(jogador.user_id)
+                    carregarPerfilDoJogador(state, jogador.user_id, coroutineScope, accessToken)
                 }
             )
         }
 
         // Cartas do jogador logado
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .zIndex(100f) // Bem acima de todo o resto
-        ) {
+        Box(modifier = Modifier.align(Alignment.Center).zIndex(100f)) {
             CartasDoJogador(
-                cartas = minhasCartas,
+                cartas = state.minhasCartas.value,
                 context = context,
-                cartasGlow = if (faseDaRodada == "showdown") cartasGlowDoJogador[userIdToken] ?: emptyList() else emptyList()
+                cartasGlow = if (state.faseDaRodada.value == "showdown")
+                    state.cartasGlowDoJogador.value[userIdToken] ?: emptyList()
+                else emptyList()
             )
         }
     }
-}///
-
-
+}
