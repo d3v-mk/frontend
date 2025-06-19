@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.panopoker.R
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -162,6 +163,65 @@ fun LobbyScreenTest(navController: NavController) {
             }
 
 
+            //cards centrais
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.Center)
+            ) {
+                val tamanho = if (maxWidth < 650.dp) maxWidth else 650.dp
+
+                Box(
+                    modifier = Modifier
+                        .width(tamanho)
+                        .height(tamanho)
+                        .align(Alignment.Center)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .align(Alignment.Center)
+                            .graphicsLayer {
+                                translationX = size.width * 0.15f // muda 0.2f pra o quanto quiser andar
+                            },
+                        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_cardsgames),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                        )
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_cardsgames),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                        )
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_cardsgames),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                        )
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_cardsgames),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                        )
+                    }
+                }
+            }
+
+
+
+
 
 
             // Rodapé
@@ -187,32 +247,36 @@ fun LobbyScreenTest(navController: NavController) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.Center)
+                        .offset(x = 222.dp, y = (0).dp)
                         .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
+                    horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.Start),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_mail),
-                        contentDescription = "Mail",
-                        modifier = Modifier
-                            .size(38.dp)
-                            .padding(horizontal = 8.dp)
-                    )
-                    Icon(
                         painter = painterResource(id = R.drawable.ic_market),
                         contentDescription = "Market",
-                        modifier = Modifier
-                            .size(46.dp)
-                            .padding(horizontal = 8.dp)
+                        modifier = Modifier.size(38.dp)
                     )
+
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_mail),
+                        contentDescription = "Mail",
+                        modifier = Modifier.size(38.dp)
+                    )
+
                     Icon(
                         painter = painterResource(id = R.drawable.ic_perfil),
                         contentDescription = "Perfil",
-                        modifier = Modifier
-                            .size(38.dp)
-                            .padding(horizontal = 8.dp)
+                        modifier = Modifier.size(38.dp)
+                    )
+
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_bag),
+                        contentDescription = "Bag",
+                        modifier = Modifier.size(38.dp)
                     )
                 }
+
 
             }
 
