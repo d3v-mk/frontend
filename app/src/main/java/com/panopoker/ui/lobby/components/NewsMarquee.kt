@@ -49,7 +49,6 @@ fun NewsMarquee(
     Box(
         modifier = modifier
             .clipToBounds()
-            .background(Color.Black)
             .height(36.dp)
             .fillMaxWidth()
             .onGloballyPositioned { boxWidth = it.size.width.toFloat() },
