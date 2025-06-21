@@ -2,10 +2,15 @@ package com.panopoker.ui.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.panopoker.R
@@ -14,15 +19,31 @@ import com.panopoker.R
 
 
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.sp
+
+import androidx.compose.ui.text.withStyle
+
+
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
 ) {
     val context = LocalContext.current
 
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val screenHeight = configuration.screenHeightDp.dp
+
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         // Fundo
         Image(
@@ -33,38 +54,57 @@ fun LoginScreen(
         )
 
         // Conteúdo responsivo
-        BoxWithConstraints {
-            val screenHeight = maxHeight
-            val bottomPadding = screenHeight * 0.2f // ou ajusta pra 0.1f, 0.15f, etc
-
-            Column(
+        Box(modifier = Modifier.fillMaxSize()) {
+            GoogleLoginScreen(
+                onLoginSuccess = { onLoginSuccess() },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = bottomPadding),
-                verticalArrangement = Arrangement.Top
-            ) {
-                // Campos do topo
-                Spacer(modifier = Modifier.height(1.dp)) // espaço reservado pra logo ou algo assim
+                    .width(screenWidth * 0.3f) // Responsivo na largura
+                    .height(screenHeight * 0.15f) // Responsivo na altura
+                    .offset(x = screenWidth * 0f, y = screenHeight * -0.4f)
+                    .align(Alignment.Center)
+            )
 
-                // Bloco central (formulários, etc.)
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    // Ex: TextField de email/senha
-                }
+            val annotatedText = buildAnnotatedString {
+                append("Ao continuar, você concorda com os ")
 
-                // Agora sim o botão no final
-                GoogleLoginScreen {
-                    onLoginSuccess()
+                pushStringAnnotation(tag = "TERMS", annotation = "https://seusite.com/termos")
+                withStyle(style = SpanStyle(color = Color.Cyan, textDecoration = TextDecoration.Underline)) {
+                    append("Termos de Uso")
                 }
+                pop()
+
+                append(" e com a ")
+
+                pushStringAnnotation(tag = "PRIVACY", annotation = "https://seusite.com/privacidade")
+                withStyle(style = SpanStyle(color = Color.Cyan, textDecoration = TextDecoration.Underline)) {
+                    append("Política de Privacidade")
+                }
+                pop()
+
+                append(".")
             }
+
+            ClickableText(
+                text = annotatedText,
+                style = MaterialTheme.typography.bodySmall.copy(color = Color.White, fontSize = 12.sp),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(x = screenWidth * 0f, y = screenHeight * -0.25f)
+                    .padding(horizontal = 24.dp),
+                onClick = { offset ->
+                    annotatedText.getStringAnnotations(start = offset, end = offset)
+                        .firstOrNull()?.let { annotation ->
+                            if (annotation.tag == "TERMS" || annotation.tag == "PRIVACY") {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
+                                context.startActivity(intent)
+                            }
+                        }
+                }
+            )
         }
     }
 }
+
 
 
 // TELA DE LOGIN PRA DEBUGGGGGGGG

@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.panopoker.R
 
 @Composable
-fun GoogleLoginScreen(onLoginSuccess: () -> Unit) {
+fun GoogleLoginScreen(onLoginSuccess: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
     val launcher = rememberLauncherForActivityResult(
@@ -61,7 +61,7 @@ fun GoogleLoginScreen(onLoginSuccess: () -> Unit) {
             contentColor = Color.Black
         ),
         border = BorderStroke(1.dp, Color.LightGray),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(40.dp)
     ) {
