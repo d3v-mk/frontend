@@ -9,13 +9,21 @@ import com.panopoker.data.service.PromotorService
 import com.panopoker.data.service.UsuarioService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import android.util.Log
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
 
-    private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+    // Interceptor custom que mascara token Authorization nos logs
+    private val safeLoggingInterceptor = HttpLoggingInterceptor { message ->
+        if (message.startsWith("Authorization:")) {
+            Log.i("OkHttp", "Authorization: Bearer *** (token ocultado no log)")
+        } else {
+            Log.i("OkHttp", message)
+        }
+    }.apply {
+        level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.HEADERS else HttpLoggingInterceptor.Level.NONE
     }
 
     private val client = OkHttpClient.Builder()
@@ -25,7 +33,7 @@ object RetrofitInstance {
                 .build()
             chain.proceed(request)
         }
-        .addInterceptor(loggingInterceptor)
+        .addInterceptor(safeLoggingInterceptor)
         .build()
 
     private val gson: Gson = GsonBuilder()
@@ -35,7 +43,7 @@ object RetrofitInstance {
 
     val retrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(BuildConfig.API_BASE_URL) // 👈 Agora puxa automático!
+            .baseUrl(BuildConfig.API_BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
