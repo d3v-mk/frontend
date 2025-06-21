@@ -2,6 +2,7 @@ package com.panopoker.ui.lobby
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -32,6 +33,7 @@ import com.panopoker.data.session.SessionManager
 import com.panopoker.ui.lobby.components.CarrosselLoby
 import com.panopoker.ui.lobby.components.NewsMarquee
 import kotlinx.coroutines.delay
+import java.util.Locale
 
 @Composable
 fun LobbyScreen(navController: NavController) {
@@ -55,6 +57,7 @@ fun LobbyScreen(navController: NavController) {
     val screenHeight = configuration.screenHeightDp.dp
 
 
+
     LaunchedEffect(Unit) {
         saldoUsuario = session.fetchUserBalance()
 
@@ -66,6 +69,7 @@ fun LobbyScreen(navController: NavController) {
                         nomeUsuario = perfil.nome
                         idPublico = perfil.id_publico
                         avatarUrl = perfil.avatarUrl
+                        Log.d("AvatarURL", "Avatar URL recebido: $avatarUrl")
                     }
                 }
             } catch (e: Exception) {
@@ -145,13 +149,15 @@ fun LobbyScreen(navController: NavController) {
                     .padding(start = 16.dp, top = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(modifier = Modifier.size(67.dp)) {
+                Box(modifier = Modifier
+                    .size(67.dp)
+                    .offset(x = screenHeight * -0.05f, y = screenWidth * 0.025f)
+                ) {
                     Image(
-                        painter = rememberAsyncImagePainter(avatarUrl ?: "https://i.pravatar.cc/150?img=3"),
+                        painter = rememberAsyncImagePainter(avatarUrl ?: "https://api.dicebear.com/7.x/initials/png?seed=${nomeUsuario}"),
                         contentDescription = "Foto do Jogador",
                         modifier = Modifier
                             .fillMaxSize()
-                            .offset(x = (-16).dp, y = 20.dp)
                             .clip(CircleShape)
                     )
                     Text(
@@ -162,7 +168,7 @@ fun LobbyScreen(navController: NavController) {
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
-                            .absoluteOffset(x = 80.dp, y = 30.dp)
+                            .offset(x = screenHeight * 0.25f, y = screenWidth * 0.01f)
                             .widthIn(max = 160.dp)
                     )
                 }
@@ -186,7 +192,7 @@ fun LobbyScreen(navController: NavController) {
                     .height(45.dp)
             )
             Text(
-                text = "10,00",
+                text = "0,00",
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFFFA000),
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
@@ -212,7 +218,7 @@ fun LobbyScreen(navController: NavController) {
             )
 
             Text(
-                text = String.format("%.2f", saldoUsuario),
+                text = String.format(Locale.getDefault(), "%.2f", saldoUsuario),
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFFFA000),
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
@@ -263,7 +269,13 @@ fun LobbyScreen(navController: NavController) {
                             contentPadding = PaddingValues(horizontal = 16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            items(3) { index ->
+                            items(2) { index ->
+                                val (imagem, rota, textoSobreposto) = when (index) {
+                                    0 -> Triple(R.drawable.ic_cardjogar, "mesas_poker", "JOGAR")
+                                    1 -> Triple(R.drawable.ic_cardtorneio, "perfil", "TORNEIOS")
+                                    else -> Triple(R.drawable.ic_cardjogar, "mesas_poker", null)
+                                }
+
                                 Box(
                                     modifier = Modifier
                                         .width(160.dp)
@@ -273,20 +285,36 @@ fun LobbyScreen(navController: NavController) {
                                             indication = null,
                                             interactionSource = remember { MutableInteractionSource() }
                                         ) {
-                                            navController.navigate("mesas_poker")
+                                            navController.navigate(rota)
                                         }
                                 ) {
                                     Image(
-                                        painter = painterResource(id = R.drawable.ic_cardjogar),
-                                        contentDescription = "Carta ${index + 2}",
+                                        painter = painterResource(id = imagem),
+                                        contentDescription = "Carta ${index + 1}",
                                         modifier = Modifier.fillMaxSize()
                                     )
+
+                                    textoSobreposto?.let {
+                                        Text(
+                                            text = it,
+                                            color = Color.White,
+                                            fontSize = 14.sp,
+                                            //fontWeight = FontWeight.Bold,
+                                            modifier = Modifier
+                                                .align(Alignment.Center)
+                                                .padding(top = 8.dp)
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                                .offset(x = screenWidth * 0f, y = screenHeight * -0.2f)
+                                        )
+                                    }
                                 }
                             }
+
                             item {
                                 Spacer(modifier = Modifier.width(160.dp + 8.dp))
                             }
                         }
+
                     }
                 }
             }
@@ -319,7 +347,21 @@ fun LobbyScreen(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(painterResource(id = R.drawable.ic_market), contentDescription = "Market", modifier = Modifier.size(38.dp))
-                Icon(painterResource(id = R.drawable.ic_mail), contentDescription = "Mail", modifier = Modifier.size(38.dp))
+                Box {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_mail),
+                        contentDescription = "Mail",
+                        modifier = Modifier.size(38.dp)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .align(Alignment.TopEnd)
+                            .offset(x = 1.dp, y = (-4).dp)
+                            .background(Color.Red, shape = CircleShape)
+                    )
+                }
+
                 Icon(painterResource(id = R.drawable.ic_perfil), contentDescription = "Perfil", modifier = Modifier.size(38.dp))
                 Icon(painterResource(id = R.drawable.ic_bag), contentDescription = "Bag", modifier = Modifier.size(38.dp))
             }
